@@ -1,0 +1,28 @@
+# Environment variables (contains your real API key — NEVER commit this)
+.env
+
+# Virtual environment
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Database (each teammate should have their own local copy)
+gem_compliance.db
+
+# Uploaded documents (test files, don't need to be in git)
+uploads/*
+!uploads/.gitkeep
+
+# ML model (large binary file — optional to exclude, see note below)
+# app/ml/risk_model.pkl
+
+# OS-specific junk
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
