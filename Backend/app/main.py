@@ -21,7 +21,7 @@ from app.routers import bidders, documents, compliance, dashboard
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="GeM Rakshak — AI Bid Compliance Verification Platform",
+    title="GeMGuard AI — AI Bid Compliance Verification Platform",
     description="AI-powered GeM bidder compliance verification backend (SIH problem statement). "
                  "Rakshak = 'protector' — the AI protects the procurement process by verifying "
                  "bidder compliance and flagging risk, while the final decision stays with the officer.",
@@ -45,4 +45,4 @@ app.include_router(dashboard.router)
 
 @app.get("/")
 def root():
-    return {"status": "ok", "message": "GeM Rakshak API is running"}
+    return {"status": "ok", "message": "GeMGuard AI API is running"}

@@ -53,16 +53,11 @@ export default function BidderSidebar({ isOpen, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-outline-variant">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shrink-0">
-              <Shield className="w-5 h-5 text-on-primary" />
-            </div>
+            <img src="/gemguard-logo.png" alt="GemGuard AI" className="w-10 h-10 object-contain shrink-0" />
             {!collapsed && (
               <div className="flex flex-col min-w-0">
                 <span className="text-base font-bold text-primary tracking-tight truncate">
-                  Gem Rakshak
-                </span>
-                <span className="text-xs font-semibold text-secondary truncate">
-                  Bidder Portal
+                  GeMGuard AI
                 </span>
               </div>
             )}
@@ -92,8 +87,7 @@ export default function BidderSidebar({ isOpen, onClose }) {
               </div>
             </div>
             <div className="mt-2 pt-2 border-t border-outline-variant/40 flex items-center justify-between text-[10px]">
-              <span className="text-on-surface-variant">Tender: GEM/2026/MPNG/001</span>
-              <span className="font-semibold text-primary">Active</span>
+              <span className="text-on-surface-variant truncate">Tender: {state.tenderId || "Not linked"}</span>
             </div>
           </div>
         )}
@@ -147,7 +141,7 @@ export default function BidderSidebar({ isOpen, onClose }) {
           >
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-primary shrink-0" />
-              {!collapsed && <span>Switch to Officer Portal</span>}
+              {!collapsed && <span>Officer Portal</span>}
             </div>
             {!collapsed && <ExternalLink className="w-3.5 h-3.5 opacity-60" />}
           </button>

@@ -67,7 +67,7 @@ export default function BidderLogin() {
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-bold text-primary tracking-tight leading-tight">
-                Gem Rakshak
+                GeMGuard AI
               </span>
               <span className="text-[11px] font-semibold text-secondary uppercase tracking-wider">
                 Bidder Portal
@@ -145,7 +145,7 @@ export default function BidderLogin() {
               <Shield className="w-5 h-5 text-on-primary" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold text-primary">Gem Rakshak</span>
+              <span className="text-xl font-bold text-primary">GeMGuard AI</span>
               <span className="text-[10px] text-on-surface-variant uppercase font-semibold">Bidder Portal</span>
             </div>
           </div>

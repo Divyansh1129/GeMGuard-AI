@@ -1,6 +1,6 @@
 // bidderService.js
 // -------------------
-// Talks to the REAL GeM Rakshak backend now (was 100% mocked before).
+// Talks to the REAL GeMGuard AI backend now (was 100% mocked before).
 // This file is an ADAPTER: your backend returns snake_case fields like
 // `company_name`, `compliance_score`, `risk_level` — but the existing UI
 // components expect camelCase-ish fields like `name`, `complianceScore`,

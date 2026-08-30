@@ -51,16 +51,11 @@ export default function Sidebar({ isOpen, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-outline-variant">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shrink-0">
-              <Shield className="w-5 h-5 text-on-primary" />
-            </div>
+            <img src="/gemguard-logo.png" alt="GemGuard AI" className="w-10 h-10 object-contain shrink-0" />
             {!collapsed && (
               <div className="flex flex-col min-w-0">
                 <span className="text-base font-bold text-primary tracking-tight truncate">
-                  Gem Rakshak
-                </span>
-                <span className="text-xs text-on-surface-variant truncate">
-                  GeM Compliance Intelligence
+                  GeMGuard AI
                 </span>
               </div>
             )}
@@ -82,9 +77,6 @@ export default function Sidebar({ isOpen, onClose }) {
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-semibold text-on-surface truncate">
                 Compliance Officer
-              </span>
-              <span className="text-xs text-on-surface-variant">
-                ID: 88294-GOV
               </span>
             </div>
           </div>
@@ -138,7 +130,7 @@ export default function Sidebar({ isOpen, onClose }) {
           >
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-primary shrink-0" />
-              {!collapsed && <span>Switch to Bidder Portal</span>}
+              {!collapsed && <span>Bidder Portal</span>}
             </div>
           </button>
 

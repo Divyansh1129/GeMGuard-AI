@@ -1,7 +1,7 @@
 // api.js
 // ---------
 // The real HTTP client — replaces the old stub that just faked delays and
-// returned null. This one actually calls your GeM Rakshak FastAPI backend.
+// returned null. This one actually calls your GeMGuard AI FastAPI backend.
 //
 // VITE_API_URL comes from .env (see .env.example) — defaults to your local
 // backend if not set, so it works out of the box during development.

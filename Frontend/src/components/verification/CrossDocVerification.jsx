@@ -29,20 +29,20 @@ export default function CrossDocVerification({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
           {entityComparisons.length ? entityComparisons.map((item, idx) => {
             const isMismatch = item.status === "mismatch";
             return (
               <div
                 key={idx}
-                className={`p-2.5 rounded border text-xs flex flex-col justify-between ${
+                className={`p-3 rounded border text-xs flex flex-col justify-between min-w-0 ${
                   isMismatch
                     ? "bg-amber-50/70 border-amber-300"
                     : "bg-surface-container-lowest border-outline-variant/40"
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-bold text-on-surface-variant uppercase">
+                  <span className="font-bold text-on-surface-variant uppercase break-words">
                     {item.doc}
                   </span>
                   {isMismatch ? (

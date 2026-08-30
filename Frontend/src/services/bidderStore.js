@@ -1,6 +1,6 @@
 // bidderStore.js
 // -----------------
-// REWRITTEN to pull from the real GeM Rakshak backend instead of a fake
+// REWRITTEN to pull from the real GeMGuard AI backend instead of a fake
 // localStorage snapshot. Every page (BidderDashboard, BidderDocuments,
 // BidderProfile, BidderStatus, BidderSidebar, BidderTopbar, OfficerDecision)
 // calls getState() / subscribe() / uploadDocument() etc — those function

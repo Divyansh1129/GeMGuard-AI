@@ -40,7 +40,7 @@ export default function Login() {
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-bold text-primary tracking-tight leading-tight">
-                Gem Rakshak
+                GeMGuard AI
               </span>
               <span className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">
                 Officer Portal
@@ -114,7 +114,7 @@ export default function Login() {
               <Shield className="w-5 h-5 text-on-primary" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold text-primary">Gem Rakshak</span>
+              <span className="text-xl font-bold text-primary">GeMGuard AI</span>
               <span className="text-[10px] text-on-surface-variant uppercase font-semibold">Officer Portal</span>
             </div>
           </div>
