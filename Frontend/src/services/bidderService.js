@@ -142,8 +142,19 @@ export const bidderService = {
       gstin: bidderData.gstin,
       udyam_number: bidderData.udyamNumber,
       tender_id: bidderData.tenderId,
+      tender_id: bidderData.tenderId,
     });
     return mapBidder(data, null, 0);
+  },
+
+  async update(id, bidderData) {
+    const { data } = await api.patch(`/bidders/${id}`, {
+      company_name: bidderData.bidderName,
+      pan_number: bidderData.pan,
+      gstin: bidderData.gstin,
+      udyam_number: bidderData.udyamNumber,
+    });
+    return mapBidder(data, complianceCache.get(Number(id)) || null, null);
   },
 };
 

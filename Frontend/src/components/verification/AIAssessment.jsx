@@ -2,16 +2,11 @@ import React from "react";
 import { Sparkles, CheckCircle2, AlertTriangle, XCircle, Info } from "lucide-react";
 
 export default function AIAssessment({
-  confidence = 92,
-  status = "REVIEW REQUIRED",
-  findings = [
-    { type: "success", text: "All 8 mandatory compliance documents submitted and verified valid." },
-    { type: "success", text: "PAN, GST and Udyam identify the same legal corporate entity." },
-    { type: "warning", text: "Minor entity name variation detected in ESIC ('ABC Technology Solutions' vs 'ABC Technologies')." },
-    { type: "danger", text: "OEM authorization letter specifies 'ABC Tech Solutions' which requires entity clarification." },
-  ],
-  reasoning = "The submitted documentation exhibits strong fundamental compliance with GST and PAN active registrations. However, discrepancies exist between the bidder's registered legal name and the entity named in both the ESIC filing and the Grundfos OEM authorization letter.",
-  recommendation = "Request formal entity clarification regarding the OEM authorization letter and ESIC registration name before final procurement award.",
+  confidence = null,
+  status = "PENDING",
+  findings = [],
+  reasoning = "No evidence assessment is available yet.",
+  recommendation = "Upload documents and run the compliance check.",
 }) {
   return (
     <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-lg p-5">
@@ -35,7 +30,7 @@ export default function AIAssessment({
             <div className="text-[10px] text-on-surface-variant font-semibold uppercase">
               AI Confidence
             </div>
-            <div className="text-sm font-bold text-primary">{confidence}%</div>
+            <div className="text-sm font-bold text-primary">{confidence ?? "—"}%</div>
           </div>
           <div className="px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold tracking-wider">
             {status}
@@ -72,6 +67,7 @@ export default function AIAssessment({
               <span className="leading-relaxed font-medium">{f.text}</span>
             </div>
           ))}
+          {!findings.length && <p className="text-xs text-on-surface-variant">No findings have been generated.</p>}
         </div>
       </div>
 

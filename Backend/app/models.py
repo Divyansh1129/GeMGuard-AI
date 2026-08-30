@@ -33,6 +33,34 @@ class Bidder(Base):
     checks = relationship("ComplianceCheck", back_populates="bidder")
 
 
+class Tender(Base):
+    __tablename__ = "tenders"
+
+    id = Column(String, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    department = Column(String)
+    file_path = Column(String, nullable=False)
+    extracted_text = Column(Text)
+    status = Column(String, default="Active")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    requirements = relationship("TenderRequirement", back_populates="tender", cascade="all, delete-orphan")
+
+
+class TenderRequirement(Base):
+    __tablename__ = "tender_requirements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tender_id = Column(String, ForeignKey("tenders.id"), nullable=False)
+    requirement_key = Column(String, nullable=False)
+    label = Column(String, nullable=False)
+    mandatory = Column(Integer, default=1)
+    minimum_value = Column(Float)
+    unit = Column(String)
+    verification_type = Column(String, default="document_evidence")
+    source_evidence = Column(Text)
+    tender = relationship("Tender", back_populates="requirements")
+
+
 class Document(Base):
     __tablename__ = "documents"
 

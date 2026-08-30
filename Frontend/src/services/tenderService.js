@@ -1,27 +1,37 @@
-import { tenders, getTenderById } from "../data/tenders";
+import api from "./api";
+
+function mapTender(tender) {
+  return {
+    ...tender,
+    deadline: "Not extracted",
+    value: "Not extracted",
+    totalBids: 0,
+    verified: 0,
+    underReview: 0,
+    flagged: 0,
+  };
+}
 
 export const tenderService = {
   async getAll() {
-    return [...tenders];
+    const { data } = await api.get("/dashboard/tenders");
+    return data.map(mapTender);
   },
-
   async getById(id) {
-    return getTenderById(id) || null;
+    try {
+      const { data } = await api.get(`/dashboard/tenders/${encodeURIComponent(id)}`);
+      return mapTender(data);
+    } catch {
+      return null;
+    }
   },
-
-  async search(query) {
-    const q = query.toLowerCase();
-    return tenders.filter(
-      (t) =>
-        t.name.toLowerCase().includes(q) ||
-        t.id.toLowerCase().includes(q) ||
-        t.department.toLowerCase().includes(q)
-    );
-  },
-
-  async getByStatus(status) {
-    if (!status || status === "All") return [...tenders];
-    return tenders.filter((t) => t.status === status);
+  async upload({ name, department, file }) {
+    const form = new FormData();
+    form.append("name", name);
+    form.append("department", department || "");
+    form.append("file", file);
+    const { data } = await api.post("/dashboard/tenders/upload", form, true);
+    return mapTender(data);
   },
 };
 

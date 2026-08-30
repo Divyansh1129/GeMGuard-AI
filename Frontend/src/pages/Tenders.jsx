@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Gavel, Calendar, ArrowRight, Filter } from "lucide-react";
+import { Search, Gavel, Calendar, ArrowRight, Filter, Upload } from "lucide-react";
 import StatusBadge from "../components/common/StatusBadge";
 import Button from "../components/common/Button";
 import tenderService from "../services/tenderService";
@@ -10,6 +10,20 @@ export default function Tenders() {
   const [tenders, setTenders] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [uploading, setUploading] = useState(false);
+
+  const uploadTender = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const tender = await tenderService.upload({ name: file.name.replace(/\.[^.]+$/, ""), file });
+      setTenders((current) => [tender, ...current]);
+    } finally {
+      setUploading(false);
+      event.target.value = "";
+    }
+  };
 
   useEffect(() => {
     async function load() {
@@ -41,6 +55,10 @@ export default function Tenders() {
 
         {/* Search & Filter */}
         <div className="flex flex-wrap items-center gap-2">
+          <label className="px-3 py-1.5 text-xs font-semibold rounded border border-outline-variant bg-surface-container-lowest text-on-surface cursor-pointer flex items-center gap-1">
+            <Upload className="w-3.5 h-3.5" /> {uploading ? "Extracting…" : "Upload Tender"}
+            <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={uploadTender} disabled={uploading} className="hidden" />
+          </label>
           <div className="relative">
             <Search className="w-4 h-4 text-outline absolute left-3 top-1/2 -translate-y-1/2" />
             <input

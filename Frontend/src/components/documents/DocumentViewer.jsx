@@ -89,7 +89,7 @@ export default function DocumentViewer({ document: doc }) {
         </div>
       </div>
 
-      {/* Realistic Government Certificate Canvas / Document Canvas */}
+      {/* Uploaded source file and the exact OCR transcription */}
       <div className="flex-1 bg-surface-container-high/50 p-6 overflow-auto flex items-center justify-center min-h-[420px]">
         <div
           style={{
@@ -97,67 +97,12 @@ export default function DocumentViewer({ document: doc }) {
             transformOrigin: "center center",
             transition: "transform 0.2s ease-out",
           }}
-          className="w-[480px] min-h-[620px] bg-white border-2 border-slate-300 shadow-md p-8 rounded flex flex-col justify-between select-none relative"
+          className="w-full min-h-[620px] max-w-3xl bg-white border-2 border-slate-300 shadow-md rounded overflow-hidden"
         >
-          {/* Government Watermark / Header */}
-          <div className="text-center border-b-2 border-slate-800 pb-4">
-            <div className="text-[10px] uppercase font-bold tracking-widest text-slate-500 mb-1">
-              Government of India / Procurement Compliance Record
-            </div>
-            <div className="text-base font-bold text-slate-900 tracking-tight">
-              {doc?.name?.toUpperCase() || "OFFICIAL CERTIFICATE"}
-            </div>
-            <div className="text-[11px] text-slate-600 font-mono mt-0.5">
-              Verified via National e-Governance Directory
-            </div>
-          </div>
-
-          {/* Document Content Rendered Cleanly */}
-          <div className="my-6 space-y-4 text-xs text-slate-800">
-            <div className="bg-slate-50 p-3 rounded border border-slate-200">
-              <div className="text-[10px] uppercase font-semibold text-slate-500 mb-1">
-                Registered Legal Entity
-              </div>
-              <div className="text-sm font-bold text-slate-900">
-                {doc?.extractedFields?.["Legal Name"] ||
-                  doc?.extractedFields?.["Name on PAN"] ||
-                  doc?.extractedFields?.["Enterprise Name"] ||
-                  doc?.extractedFields?.["Employer Name"] ||
-                  doc?.extractedFields?.["Declaring Entity"] ||
-                  "ABC Technologies Pvt Ltd"}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {doc?.extractedFields &&
-                Object.entries(doc.extractedFields).map(([k, v]) => (
-                  <div key={k} className="p-2 border-b border-slate-200">
-                    <span className="text-[10px] text-slate-500 block uppercase font-medium">
-                      {k}
-                    </span>
-                    <span className="font-semibold text-slate-900 font-mono text-[11px]">
-                      {v}
-                    </span>
-                  </div>
-                ))}
-            </div>
-          </div>
-
-          {/* Official Stamp & Security QR */}
-          <div className="pt-4 border-t-2 border-dashed border-slate-300 flex items-center justify-between">
-            <div className="space-y-0.5">
-              <div className="text-[9px] text-slate-500 uppercase">
-                Digital Verification Hash
-              </div>
-              <div className="font-mono text-[10px] text-slate-700">
-                SHA256: 8f9b...a42e-GOV-CERT
-              </div>
-            </div>
-            <div className="w-12 h-12 border-2 border-primary/40 rounded flex items-center justify-center text-[9px] text-primary font-bold text-center leading-tight bg-primary/5">
-              SEAL
-              <br />
-              VALID
-            </div>
+          {doc?.fileUrl ? <iframe title={`Uploaded ${doc.name}`} src={doc.fileUrl} className="w-full h-[430px] border-0" /> : null}
+          <div className="border-t border-slate-200 p-4 text-xs text-slate-800">
+            <h4 className="font-bold mb-2">OCR transcription</h4>
+            {doc?.rawText ? <ol className="list-decimal list-inside space-y-1 font-mono whitespace-pre-wrap">{doc.rawText.split("\n").map((line, index) => <li key={index}>{line || " "}</li>)}</ol> : <p>No OCR text was recovered from this upload.</p>}
           </div>
         </div>
       </div>

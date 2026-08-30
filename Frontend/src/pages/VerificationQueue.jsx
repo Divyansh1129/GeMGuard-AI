@@ -12,7 +12,6 @@ import StatusBadge from "../components/common/StatusBadge";
 import RiskBadge from "../components/common/RiskBadge";
 import Button from "../components/common/Button";
 import bidderService from "../services/bidderService";
-import { issues } from "../data/issues";
 
 export default function VerificationQueue() {
   const navigate = useNavigate();
@@ -28,56 +27,18 @@ export default function VerificationQueue() {
     load();
   }, []);
 
-  const queueItems = [
-    {
-      id: "Q-001",
-      bidderId: "BID-2026-00428",
-      bidderName: "ABC Technologies Pvt Ltd",
-      tenderName: "Industrial Pump Procurement",
-      issue: "ESIC Entity Name Variation",
-      category: "Entity Mismatch",
-      severity: "Medium",
-      confidence: 94,
-      status: "Review Required",
-      risk: "Medium",
-    },
-    {
-      id: "Q-002",
-      bidderId: "BID-2026-00428",
-      bidderName: "ABC Technologies Pvt Ltd",
-      tenderName: "Industrial Pump Procurement",
-      issue: "OEM Authorization Mismatch",
-      category: "OEM Issue",
-      severity: "High",
-      confidence: 98,
-      status: "Review Required",
-      risk: "Medium",
-    },
-    {
-      id: "Q-003",
-      bidderId: "BID-2026-00429",
-      bidderName: "XYZ Industries Ltd",
-      tenderName: "Industrial Pump Procurement",
-      issue: "GST Certificate Validity Period Flag",
-      category: "Expired Document",
-      severity: "Medium",
-      confidence: 91,
-      status: "Review Required",
-      risk: "Medium",
-    },
-    {
-      id: "Q-004",
-      bidderId: "BID-2026-00430",
-      bidderName: "PQR Enterprises",
-      tenderName: "Industrial Pump Procurement",
-      issue: "Missing Startup India / Non-Blacklisting Attestation",
-      category: "Missing Document",
-      severity: "High",
-      confidence: 99,
-      status: "Non-Compliant",
-      risk: "High",
-    },
-  ];
+  const queueItems = bidders.filter((bidder) => bidder.issueCount > 0).map((bidder) => ({
+    id: `Q-${bidder.id}`,
+    bidderId: bidder.id,
+    bidderName: bidder.name,
+    tenderName: bidder.tenderName,
+    issue: `${bidder.issueCount} evidence check${bidder.issueCount === 1 ? "" : "s"} need review`,
+    category: "Evidence review",
+    severity: bidder.risk === "High" ? "High" : "Medium",
+    confidence: bidder.complianceScore ?? 0,
+    status: bidder.status,
+    risk: bidder.risk,
+  }));
 
   const filteredQueue = queueItems.filter((item) => {
     const matchSearch =

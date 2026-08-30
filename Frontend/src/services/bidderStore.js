@@ -8,7 +8,7 @@
 // change. Only what happens INSIDE these functions changed: real fetch
 // calls instead of reading/writing localStorage mock data.
 
-import api from "./api";
+import api, { API_BASE_URL } from "./api";
 import documentService from "./documentService";
 import bidderService from "./bidderService";
 
@@ -123,24 +123,26 @@ async function refreshFromBackend() {
         parseError = true;
       }
       return {
-        id: def.id,
+        id: String(match.id),
         type: def.type,
         name: def.name,
         required: def.required,
         uploaded: true,
-        fileName: null,
-        fileSize: null,
+        fileName: extractedFields.file_name || null,
+        fileSize: extractedFields.file_size || null,
+        fileUrl: `${API_BASE_URL}/documents/${match.id}/file`,
         uploadDate: match.uploaded_at
           ? new Date(match.uploaded_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
           : null,
-        status: parseError ? "Pending Verification" : "Verified",
+        status: parseError ? "Pending Verification" : ({ pending: "Pending Verification", verified: "Verified", mismatch: "Clarification Required", invalid: "Non-Compliant" }[match.verification_status] || "Pending Verification"),
         finding: parseError
           ? "Automatic field extraction failed — please re-upload a clearer copy."
           : "Document processed by AI extraction pipeline",
-        ocrConfidence: null,
+        ocrConfidence: typeof extractedFields.confidence === "number" ? Math.round(extractedFields.confidence * 100) : null,
         verificationConfidence: null,
         clarificationMessage: null,
         extractedFields,
+        rawText: match.extracted_text || "",
         verificationResult: parseError
           ? { valid: false, message: "Could not extract structured fields." }
           : { valid: true, message: "Fields extracted successfully." },
@@ -205,7 +207,7 @@ export const bidderStore = {
     try {
       await documentService.upload(auth.bidderRealId, backendType, fileObj);
     } catch (err) {
-      console.error("Upload failed:", err.message);
+      throw err;
     }
     await refreshFromBackend();
     return currentState;
@@ -246,10 +248,12 @@ export const bidderStore = {
     return currentState;
   },
 
-  // Backend has no PUT /bidders/{id} endpoint yet — local-only, does not persist.
-  updateProfile(profileData) {
-    console.warn("bidderStore.updateProfile: not persisted to backend yet — local UI only.");
+  async updateProfile(profileData) {
+    const auth = getAuth();
+    if (!auth?.bidderRealId) throw new Error("No authenticated bidder record is available.");
+    await bidderService.update(auth.bidderRealId, profileData);
     currentState = { ...currentState, ...profileData };
+    await refreshFromBackend();
     notify();
     return currentState;
   },

@@ -52,29 +52,29 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           label="Active Tenders"
-          value="24"
-          subtitle="Across 6 ministries"
+          value={tenders.length}
+          subtitle="Live backend records"
           icon={Gavel}
           iconColor="text-primary"
           onClick={() => navigate("/tenders")}
         />
         <KPICard
           label="Total Bids"
-          value="186"
-          subtitle="Processed this quarter"
+          value={bids.length}
+          subtitle="Live bidder records"
           icon={FileText}
           iconColor="text-secondary"
         />
         <KPICard
           label="Verified Bids"
-          value="142"
-          subtitle="76% automated pass"
+          value={bids.filter((bid) => bid.status === "Verified").length}
+          subtitle="Evidence checks passed"
           icon={CheckCircle2}
           iconColor="text-green-700"
         />
         <KPICard
           label="Needs Review"
-          value="31"
+          value={bids.filter((bid) => bid.status === "Review Required" || bid.status === "Non-Compliant").length}
           subtitle="Requires officer action"
           icon={AlertTriangle}
           iconColor="text-amber-600"
@@ -85,7 +85,7 @@ export default function Dashboard() {
       {/* Main Grid: Chart + Recent Bids */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <div className="lg:col-span-4">
-          <VerificationChart verified={76} review={17} nonCompliant={7} />
+          <VerificationChart verified={bids.filter((bid) => bid.status === "Verified").length} review={bids.filter((bid) => bid.status === "Review Required").length} nonCompliant={bids.filter((bid) => bid.status === "Non-Compliant").length} />
         </div>
         <div className="lg:col-span-8">
           <RecentBidsTable bids={bids} />

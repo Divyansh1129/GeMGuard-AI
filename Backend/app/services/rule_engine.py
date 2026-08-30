@@ -1,86 +1,74 @@
-"""
-rule_engine.py
-----------------
-The DETERMINISTIC, EXPLAINABLE part of your compliance check. No AI here on
-purpose — a procurement officer needs to see EXACTLY why a bidder failed a
-check, and rules give you that for free (an ML model's "why" is much harder
-to defend in an audit).
+"""Deterministic verification against uploaded document evidence and published ID syntax."""
+import re
+from collections import Counter
 
-Takes the mock-portal responses (or real ones, later) and applies pass/fail
-logic per requirement from the problem statement. Returns a dict the frontend
-dashboard can render directly as a checklist, and that also feeds the ML
-model as engineered features (see ml_service.py).
-"""
+PAN_RE = re.compile(r"^[A-Z]{5}[0-9]{4}[A-Z]$")
+UDYAM_RE = re.compile(r"^UDYAM-[A-Z]{2}-\d{2}-\d{7}$")
+GST_RE = re.compile(r"^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")
+GST_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
-def run_rule_checks(bidder: dict, portal_data: dict) -> dict:
-    """
-    bidder: dict with tender-specific requirements (thresholds etc.)
-    portal_data: dict with udyam/gstn/pan/epfo/esic/blacklist results
-                 (from mock_portals.py or real APIs later)
-    Returns: dict of {check_name: {"pass": bool, "detail": str}}
-    """
+def valid_gstin(value: str | None) -> bool:
+    if not value or not GST_RE.fullmatch(value.upper()):
+        return False
+    total = 0
+    for index, char in enumerate(value.upper()[:14]):
+        product = GST_CHARS.index(char) * (1 if index % 2 == 0 else 2)
+        total += product // 36 + product % 36
+    return GST_CHARS[(36 - total % 36) % 36] == value.upper()[14]
+
+
+def _normalise_name(value: str | None) -> str:
+    name = (value or "").lower()
+    name = re.sub(r"\bprivate\s+limited\b|\bpvt\.?\s*ltd\.?\b", "privatelimited", name)
+    name = re.sub(r"\blimited\b|\bltd\.?\b", "limited", name)
+    return re.sub(r"[^a-z0-9]", "", name)
+
+
+def run_rule_checks(bidder: dict, documents: dict, tender_requirements: list[dict] | None = None) -> dict:
+    """Use only extracted file evidence and declared bidder identifiers; never fake registry status."""
     results = {}
+    required_keys = {item["requirement_key"] for item in (tender_requirements or []) if item.get("mandatory")}
+    required_documents = [key for key in required_keys if key in {"pan", "gst", "udyam", "epfo", "esic", "non_blacklisting", "startup_india", "oem_auth"}]
+    for doc_type in required_documents:
+        results[f"{doc_type}_submitted"] = {"pass": bool(documents.get(doc_type)), "detail": "Uploaded document processed." if documents.get(doc_type) else "Required document has not been uploaded."}
 
-    udyam = portal_data.get("udyam", {})
-    results["udyam_registration"] = {
-        "pass": udyam.get("valid", False) and udyam.get("status") == "active",
-        "detail": f"Udyam status: {udyam.get('status', 'unknown')}"
-    }
+    pan_doc = documents.get("pan", {}).get("fields", {})
+    declared_pan = (bidder.get("pan_number") or "").upper()
+    extracted_pan = (pan_doc.get("pan") or pan_doc.get("document_id") or "").upper()
+    if "pan" in required_keys:
+        results["pan_format"] = {"pass": bool(PAN_RE.fullmatch(declared_pan)), "detail": "Declared PAN has a valid format." if PAN_RE.fullmatch(declared_pan) else "Declared PAN format is invalid or missing."}
+        results["pan_document_match"] = {"pass": bool(extracted_pan and extracted_pan == declared_pan), "detail": "PAN in uploaded evidence matches bidder declaration." if extracted_pan == declared_pan and extracted_pan else "PAN could not be matched to the uploaded PAN document."}
 
-    gstn = portal_data.get("gstn", {})
-    results["gst_registration"] = {
-        "pass": gstn.get("status") == "active",
-        "detail": f"GST status: {gstn.get('status', 'unknown')}"
-    }
-    results["gst_return_filing"] = {
-        "pass": gstn.get("returns_filed_pct_last_12m", 0) >= 80,
-        "detail": f"Returns filed: {gstn.get('returns_filed_pct_last_12m', 0)}% (required >=80%)"
-    }
+    gst_doc = documents.get("gst", {}).get("fields", {})
+    declared_gstin = (bidder.get("gstin") or "").upper()
+    extracted_gstin = (gst_doc.get("gstin") or gst_doc.get("document_id") or "").upper()
+    if "gst" in required_keys:
+        results["gstin_format_checksum"] = {"pass": valid_gstin(declared_gstin), "detail": "Declared GSTIN passes format and checksum validation." if valid_gstin(declared_gstin) else "Declared GSTIN fails format or checksum validation."}
+        results["gst_document_match"] = {"pass": bool(extracted_gstin and extracted_gstin == declared_gstin), "detail": "GSTIN in uploaded evidence matches bidder declaration." if extracted_gstin == declared_gstin and extracted_gstin else "GSTIN could not be matched to the uploaded GST certificate."}
 
-    pan = portal_data.get("pan", {})
-    results["pan_validity"] = {
-        "pass": pan.get("valid", False),
-        "detail": "PAN valid" if pan.get("valid") else "PAN invalid/not found"
-    }
-    results["income_tax_compliance"] = {
-        "pass": pan.get("itr_filed_last_year", False) and not pan.get("defaulter_flag", True),
-        "detail": f"ITR filed: {pan.get('itr_filed_last_year')}, Defaulter: {pan.get('defaulter_flag')}"
-    }
+    udyam_doc = documents.get("udyam", {}).get("fields", {})
+    declared_udyam = (bidder.get("udyam_number") or "").upper()
+    extracted_udyam = (udyam_doc.get("udyam_number") or udyam_doc.get("document_id") or "").upper()
+    if "udyam" in required_keys:
+        results["udyam_format"] = {"pass": bool(UDYAM_RE.fullmatch(declared_udyam)), "detail": "Declared Udyam number has a valid format." if UDYAM_RE.fullmatch(declared_udyam) else "Declared Udyam number format is invalid or missing."}
+        results["udyam_document_match"] = {"pass": bool(extracted_udyam and extracted_udyam == declared_udyam), "detail": "Udyam number matches uploaded evidence." if extracted_udyam == declared_udyam and extracted_udyam else "Udyam number could not be matched to uploaded evidence."}
 
-    epfo = portal_data.get("epfo", {})
-    results["epfo_compliance"] = {
-        "pass": epfo.get("compliant", True),
-        "detail": "Compliant" if epfo.get("compliant", True) else "Non-compliant"
-    }
-
-    esic = portal_data.get("esic", {})
-    results["esic_compliance"] = {
-        "pass": esic.get("compliant", True),
-        "detail": "Compliant" if esic.get("compliant", True) else "Non-compliant"
-    }
-
-    local_content = bidder.get("make_in_india_local_content_pct")
-    threshold = bidder.get("make_in_india_required_threshold", 50)
-    if local_content is not None:
-        results["make_in_india"] = {
-            "pass": local_content >= threshold,
-            "detail": f"Local content: {local_content}% (required >={threshold}%)"
-        }
-
-    blacklist = portal_data.get("blacklist", {})
-    results["blacklist_debarment"] = {
-        "pass": not blacklist.get("blacklisted", False) and not blacklist.get("debarred", False),
-        "detail": "Clear" if not blacklist.get("blacklisted") and not blacklist.get("debarred")
-                  else "FLAGGED: blacklisted or debarred"
-    }
-
+    names = [(kind, name) for kind, data in documents.items() if (name := data.get("fields", {}).get("legal_name"))]
+    normalized = [(kind, original, _normalise_name(original)) for kind, original in names]
+    if normalized:
+        consensus = Counter(value for _, _, value in normalized).most_common(1)[0][0]
+        mismatches = [kind for kind, _, value in normalized if value != consensus]
+        consensus_name = next(original for _, original, value in normalized if value == consensus)
+        results["legal_name_consistency"] = {"pass": not mismatches, "detail": "All extracted document legal names are consistent." if not mismatches else f"Document legal-name variation in: {', '.join(mismatches)}. Evidence consensus: {consensus_name}."}
+        profile_matches = _normalise_name(bidder.get("company_name")) == consensus
+        results["bidder_profile_name_match"] = {"pass": profile_matches, "detail": "Bidder profile name matches document evidence." if profile_matches else f"Bidder profile name does not match document-evidence entity '{consensus_name}'. Update the bidder profile or request clarification."}
+    else:
+        results["legal_name_consistency"] = {"pass": False, "detail": "No legal name could be extracted from submitted documents."}
+    results["registry_confirmation"] = {"pass": False, "detail": "Not performed: no authorised GSTN/NSDL/Udyam/EPFO/ESIC registry integration is configured."}
     return results
 
 
 def rule_based_score(results: dict) -> float:
-    """Simple % of checks passed -> 0-100. Used alongside the ML score."""
-    if not results:
-        return 0.0
-    passed = sum(1 for r in results.values() if r["pass"])
-    return round((passed / len(results)) * 100, 1)
+    scored = [result for key, result in results.items() if key != "registry_confirmation"]
+    return round(100 * sum(bool(result["pass"]) for result in scored) / len(scored), 1) if scored else 0.0

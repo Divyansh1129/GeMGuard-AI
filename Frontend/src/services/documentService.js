@@ -7,7 +7,7 @@
 // mock data). We map what we genuinely have, and fill the rest with
 // sensible defaults since your current backend doesn't compute those yet.
 
-import api from "./api";
+import api, { API_BASE_URL } from "./api";
 
 function mapDocument(backendDoc) {
   let extractedFields = {};
@@ -29,8 +29,9 @@ function mapDocument(backendDoc) {
     name: backendDoc.doc_type, // backend doesn't store a separate display name
     required: true,
     uploaded: true,
-    fileName: null, // backend doesn't return the original filename in this endpoint
-    fileSize: null,
+    fileName: extractedFields.file_name || null,
+    fileSize: extractedFields.file_size || null,
+    fileUrl: `${API_BASE_URL}/documents/${backendDoc.id}/file`,
     uploadDate: backendDoc.uploaded_at
       ? new Date(backendDoc.uploaded_at).toLocaleDateString("en-GB", {
           day: "2-digit", month: "short", year: "numeric",
@@ -39,13 +40,14 @@ function mapDocument(backendDoc) {
     status: parseError ? "Pending Verification" : mapVerificationStatus(backendDoc.verification_status),
     finding: parseError
       ? "Automatic field extraction failed — document may need re-upload or manual review."
-      : "Document processed by AI extraction pipeline",
-    ocrConfidence: null, // not computed by current backend — add later if needed
+      : "Document evidence extracted. Official registry verification is not configured.",
+    ocrConfidence: typeof extractedFields.confidence === "number" ? Math.round(extractedFields.confidence * 100) : null,
     verificationConfidence: null,
     extractedFields,
-    verificationResult: parseError
-      ? { valid: false, message: "Could not extract structured fields from this document." }
-      : { valid: true, message: "Fields extracted successfully." },
+    verificationResult: parseError || backendDoc.verification_status === "invalid"
+      ? { valid: false, message: extractedFields.error || "No reliable text could be extracted from this document." }
+      : { valid: backendDoc.verification_status === "verified", message: backendDoc.verification_status === "pending" ? "Awaiting evidence-based compliance check; no official registry query has been made." : "Document-evidence checks completed. Official registry status is unavailable until an authorised adapter is configured." },
+    rawText: backendDoc.extracted_text || "",
   };
 }
 
@@ -80,16 +82,9 @@ export const documentService = {
     return mapDocument(data);
   },
 
-  // NOTE: backend does not currently support editing an extracted field
-  // after the fact. This is a local-only stub so the DocumentReview page
-  // doesn't crash — the edit will NOT persist to the backend on refresh.
   async updateField(bidderId, docId, fieldName, newValue) {
-    console.warn(
-      "documentService.updateField: backend has no endpoint for this yet — change is local-only and will not persist."
-    );
-    const doc = await this.getById(bidderId, docId);
-    if (doc) doc.extractedFields[fieldName] = newValue;
-    return doc;
+    const { data } = await api.patch(`/documents/${docId}/fields`, { field_name: fieldName, value: newValue });
+    return mapDocument(data);
   },
 };
 

@@ -27,28 +27,23 @@ export default function UploadZone({ onUploadComplete }) {
     }));
 
     setFiles(fileList);
-    simulatePipeline(fileList);
+    processUploads(selectedFiles, fileList);
   };
 
-  const simulatePipeline = async (fileList) => {
+  const processUploads = async (selectedFiles, fileList) => {
     setIsProcessing(true);
     setCurrentStep(0);
-
-    for (let i = 0; i < pipelineSteps.length; i++) {
-      setCurrentStep(i);
-      await new Promise((res) => setTimeout(res, 800));
+    try {
+      await onUploadComplete?.(selectedFiles);
+      setCurrentStep(pipelineSteps.length - 1);
+      setFiles(fileList.map((file) => ({ ...file, status: "Complete" })));
+      showToast("Documents were sent to the verification pipeline.", "success");
+    } catch (error) {
+      setFiles(fileList.map((file) => ({ ...file, status: "Failed" })));
+      showToast(error.message || "Upload failed", "error");
+    } finally {
+      setIsProcessing(false);
     }
-
-    setFiles((prev) =>
-      prev.map((f) => ({
-        ...f,
-        status: "Complete",
-      }))
-    );
-
-    setIsProcessing(false);
-    showToast("✓ All bid documents uploaded & verified successfully", "success");
-    if (onUploadComplete) onUploadComplete();
   };
 
   return (

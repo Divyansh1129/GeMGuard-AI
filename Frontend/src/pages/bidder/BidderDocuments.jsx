@@ -84,27 +84,16 @@ export default function BidderDocuments() {
     setIsUploading(true);
     setUploadStep(0);
 
-    for (let i = 0; i < pipelineSteps.length; i++) {
-      setUploadStep(i);
-      await new Promise((res) => setTimeout(res, 600));
-    }
-
-    // Save to shared store
-    bidderStore.uploadDocument(selectedDocType, file, isReplacingClarification);
-
-    setIsUploading(false);
-    setUploadModalOpen(false);
-
-    if (isReplacingClarification) {
-      showToast(
-        `✓ Corrected ${selectedDocType} document submitted to Officer for review!`,
-        "success"
-      );
-    } else {
-      showToast(
-        `✓ ${selectedDocType} document uploaded & processed successfully!`,
-        "success"
-      );
+    try {
+      setUploadStep(1);
+      await bidderStore.uploadDocument(selectedDocType, file);
+      setUploadStep(4);
+      setUploadModalOpen(false);
+      showToast(`✓ ${selectedDocType} document uploaded and processed from the submitted file.`, "success");
+    } catch (error) {
+      showToast(error.message || "Document upload failed", "error");
+    } finally {
+      setIsUploading(false);
     }
   };
 

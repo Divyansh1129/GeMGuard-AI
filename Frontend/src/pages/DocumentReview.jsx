@@ -13,8 +13,8 @@ export default function DocumentReview() {
   const { bidderId, documentId } = useParams();
   const navigate = useNavigate();
 
-  const currentBidderId = bidderId || "BID-2026-00428";
-  const currentDocId = documentId || "DOC-002"; // GST default
+  const currentBidderId = bidderId;
+  const currentDocId = documentId;
 
   const [bidder, setBidder] = useState(null);
   const [doc, setDoc] = useState(null);

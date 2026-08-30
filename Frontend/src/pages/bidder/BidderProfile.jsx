@@ -10,6 +10,7 @@ export default function BidderProfile() {
   const [gstin, setGstin] = useState(state.gstin);
   const [pan, setPan] = useState(state.pan);
   const [udyamNumber, setUdyamNumber] = useState(state.udyamNumber);
+  const [tenderId, setTenderId] = useState(state.tenderId === "N/A" ? "" : state.tenderId);
   const [contactPerson, setContactPerson] = useState(state.contactPerson);
   const [contactEmail, setContactEmail] = useState(state.contactEmail);
   const [contactPhone, setContactPhone] = useState(state.contactPhone);
@@ -22,13 +23,14 @@ export default function BidderProfile() {
     return unsubscribe;
   }, []);
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    bidderStore.updateProfile({
+    await bidderStore.updateProfile({
       bidderName: companyName,
       gstin,
       pan,
       udyamNumber,
+      tenderId,
       contactPerson,
       contactEmail,
       contactPhone,
@@ -79,6 +81,19 @@ export default function BidderProfile() {
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface font-semibold focus:outline-none focus:border-primary"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-on-surface-variant uppercase mb-1">
+              Tender ID
+            </label>
+            <input
+              type="text"
+              value={tenderId}
+              onChange={(e) => setTenderId(e.target.value)}
+              placeholder="TENDER-XXXXXXXXXX"
+              className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface font-mono focus:outline-none focus:border-primary"
             />
           </div>
 

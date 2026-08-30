@@ -19,6 +19,7 @@ class Settings(BaseSettings):
 
     # File storage (local disk for hackathon)
     UPLOAD_DIR: str = "./uploads"
+    MAX_UPLOAD_BYTES: int = 10485760
 
     # ML model path
     RISK_MODEL_PATH: str = "./app/ml/risk_model.pkl"

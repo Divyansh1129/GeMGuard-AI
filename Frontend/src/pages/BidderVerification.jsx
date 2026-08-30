@@ -28,30 +28,42 @@ import { showToast } from "../components/common/Toast";
 
 import bidderService from "../services/bidderService";
 import documentService from "../services/documentService";
-import { getIssuesByBidder } from "../data/issues";
-import { getAuditLogsByBidder } from "../data/auditLogs";
+import api from "../services/api";
+
+const normaliseEntityName = (value = "") => value.toLowerCase()
+  .replace(/\bprivate\s+limited\b|\bpvt\.?\s*ltd\.?\b/g, "privatelimited")
+  .replace(/\blimited\b|\bltd\.?\b/g, "limited")
+  .replace(/[^a-z0-9]/g, "");
 
 export default function BidderVerification() {
   const { bidderId } = useParams();
   const navigate = useNavigate();
-  const currentBidderId = bidderId || "BID-2026-00428";
+  const currentBidderId = bidderId;
 
   const [bidder, setBidder] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [issuesList, setIssuesList] = useState([]);
   const [auditList, setAuditList] = useState([]);
+  const [compliance, setCompliance] = useState(null);
 
   useEffect(() => {
     async function load() {
       const b = await bidderService.getById(currentBidderId);
       const docs = await documentService.getByBidder(currentBidderId);
-      const iss = getIssuesByBidder(currentBidderId);
-      const aud = getAuditLogsByBidder(currentBidderId);
+      let latest = null;
+      try { latest = await bidderService.runComplianceCheck(currentBidderId); } catch (error) { console.error(error); }
+      const iss = Object.entries(latest?.rule_engine_result || {}).filter(([, value]) => !value.pass).map(([key, value]) => ({ id: key, title: key.replaceAll("_", " "), description: value.detail, reviewed: false, severity: "warning", aiConfidence: Math.round((1 - (latest?.ml_risk_probability || 0)) * 100), affectedDocuments: [key.split("_")[0]], recommendedAction: "Review uploaded evidence" }));
+      let aud = [];
+      try {
+        const { data } = await api.get(`/dashboard/${currentBidderId}/audit`);
+        aud = data.map((log) => ({ ...log, action: log.details, type: log.actor === "procurement_officer" ? "officer" : "ai" }));
+      } catch (error) { console.error(error); }
 
-      setBidder(b);
+      setBidder(latest ? { ...b, complianceScore: latest.compliance_score, risk: latest.risk_level } : b);
       setDocuments(docs);
       setIssuesList(iss);
       setAuditList(aud);
+      setCompliance(latest);
     }
     load();
   }, [currentBidderId]);
@@ -90,15 +102,8 @@ export default function BidderVerification() {
       officerRemarks: remarks,
     }));
 
-    const newLog = {
-      id: `AUD-${Date.now()}`,
-      timestamp: "Just now",
-      actor: "Officer (ID: 88294-GOV)",
-      action: `Officer decision recorded: ${decisionType} — "${remarks}"`,
-      type: "officer",
-    };
-
-    setAuditList((prev) => [newLog, ...prev]);
+    const { data } = await api.get(`/dashboard/${bidder.id}/audit`);
+    setAuditList(data.map((log) => ({ ...log, action: log.details, type: log.actor === "procurement_officer" ? "officer" : "ai" })));
 
     showToast(`✓ Decision '${decisionType}' submitted successfully!`, "success");
   };
@@ -149,7 +154,7 @@ export default function BidderVerification() {
         <KPICard
           label="Compliance Score"
           value={`${bidder.complianceScore}/100`}
-          subtitle="94th percentile across bidders"
+          subtitle="Calculated from uploaded evidence"
           icon={Shield}
           iconColor="text-primary"
           progress={bidder.complianceScore}
@@ -157,21 +162,21 @@ export default function BidderVerification() {
         <KPICard
           label="Verification Status"
           value={bidder.status}
-          subtitle="Automated checks complete"
+          subtitle="Decision support; officer review required"
           icon={CheckCircle}
           iconColor="text-amber-600"
         />
         <KPICard
           label="Risk Assessment"
           value={bidder.risk}
-          subtitle="1 name variance, 1 OEM mismatch"
+          subtitle="Based on current evidence findings"
           icon={AlertTriangle}
           iconColor="text-amber-600"
         />
         <KPICard
           label="Submitted Documents"
           value={`${bidder.documentsSubmitted} / ${bidder.documentsTotal}`}
-          subtitle="All 8 mandatory files verified"
+          subtitle="Current uploaded files"
           icon={FileText}
           iconColor="text-primary"
         />
@@ -185,10 +190,18 @@ export default function BidderVerification() {
           <DocumentChecklist documents={documents} bidderId={bidder.id} />
 
           {/* Cross Document Verification */}
-          <CrossDocVerification />
+          <CrossDocVerification entityComparisons={(() => {
+            const values = documents.map((doc) => ({ doc, name: doc.extractedFields?.legal_name || "" })).filter((item) => item.name);
+            const counts = values.reduce((result, item) => ({ ...result, [normaliseEntityName(item.name)]: (result[normaliseEntityName(item.name)] || 0) + 1 }), {});
+            const consensus = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
+            return documents.map((doc) => {
+              const name = doc.extractedFields?.legal_name || "Not extracted";
+              return { doc: doc.type, name, status: normaliseEntityName(name) && normaliseEntityName(name) === consensus ? "match" : "mismatch" };
+            });
+          })()} />
 
           {/* AI Compliance Assessment */}
-          <AIAssessment />
+          <AIAssessment confidence={compliance ? Math.round((1 - compliance.ml_risk_probability) * 100) : 0} status={bidder.status.toUpperCase()} findings={issuesList.map((issue) => ({ type: "warning", text: issue.description }))} reasoning={compliance?.ai_recommendation || "Run a compliance check after documents are uploaded."} recommendation={compliance?.ai_recommendation || "No assessment is available yet."} />
 
           {/* Compliance Score Breakdown */}
           <ComplianceScore score={bidder.complianceScore} />

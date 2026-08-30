@@ -2,14 +2,9 @@ import React from "react";
 import { CheckCircle2, AlertTriangle, ArrowRightLeft } from "lucide-react";
 
 export default function CrossDocVerification({
-  entityComparisons = [
-    { doc: "PAN", name: "ABC Technologies Pvt Ltd", status: "match" },
-    { doc: "GST", name: "ABC Technologies Private Limited", status: "match" },
-    { doc: "Udyam", name: "ABC Technologies Pvt Ltd", status: "match" },
-    { doc: "EPFO", name: "ABC Technologies Pvt Ltd", status: "match" },
-    { doc: "ESIC", name: "ABC Technology Solutions Pvt Ltd", status: "mismatch" },
-  ],
+  entityComparisons = [],
 }) {
+  const mismatchCount = entityComparisons.filter((item) => item.status === "mismatch").length;
   return (
     <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-lg p-5">
       <div className="flex items-center gap-2 mb-1">
@@ -28,14 +23,14 @@ export default function CrossDocVerification({
           <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
             Attribute: Legal Entity Name
           </span>
-          <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+          <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border ${mismatchCount ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-green-50 text-green-800 border-green-200"}`}>
             <AlertTriangle className="w-3 h-3" />
-            1 Variation Detected
+            {mismatchCount ? `${mismatchCount} Variation${mismatchCount === 1 ? "" : "s"} Detected` : "No variations detected"}
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
-          {entityComparisons.map((item, idx) => {
+          {entityComparisons.length ? entityComparisons.map((item, idx) => {
             const isMismatch = item.status === "mismatch";
             return (
               <div
@@ -68,7 +63,7 @@ export default function CrossDocVerification({
                 </div>
               </div>
             );
-          })}
+          }) : <p className="text-xs text-on-surface-variant">No uploaded document contains an extracted legal name yet.</p>}
         </div>
       </div>
     </div>

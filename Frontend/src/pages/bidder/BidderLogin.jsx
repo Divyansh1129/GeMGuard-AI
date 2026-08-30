@@ -8,47 +8,39 @@ import api from "../../services/api";
 // against anything real. What it DOES do now: create (or reuse) a REAL
 // bidder row in your backend, so every other bidder-side page has an
 // actual database record to read/write instead of fake data.
-const REAL_BIDDER_STORAGE_KEY = "gem_rakshak_real_bidder_id";
-
 export default function BidderLogin() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("rajesh.kumar@abctech.in");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) return;
+    if (!email.trim() || !password.trim() || !companyName.trim()) return;
 
     setLoading(true);
     setError("");
     try {
-      // Reuse the same real bidder across logins (so uploaded docs persist)
-      let bidderRealId = localStorage.getItem(REAL_BIDDER_STORAGE_KEY);
-
-      if (!bidderRealId) {
-        // First login on this browser — create a real bidder in the backend.
-        const { data } = await api.post("/bidders/", {
-          company_name: "ABC Technologies Pvt Ltd",
-          company_type: "MSME",
-          pan_number: "AABCA1234F",
-          gstin: "09ABCDE1234F1Z5",
-          udyam_number: "UDYAM-UP-09-0012345",
-          tender_id: "GEM/2026/MPNG/001",
-        });
-        bidderRealId = data.id;
-        localStorage.setItem(REAL_BIDDER_STORAGE_KEY, String(bidderRealId));
-      }
+      const { data } = await api.post("/bidders/", {
+        company_name: companyName.trim(),
+        company_type: "Unspecified",
+        pan_number: null,
+        gstin: null,
+        udyam_number: null,
+        tender_id: null,
+      });
+      const bidderRealId = data.id;
 
       localStorage.setItem(
         "gem_rakshak_bidder_auth",
         JSON.stringify({
           email,
           role: "bidder",
-          companyName: "ABC Technologies Pvt Ltd",
+          companyName: companyName.trim(),
           bidderRealId: Number(bidderRealId),
-          tenderId: "GEM/2026/MPNG/001",
+          tenderId: null,
         })
       );
       navigate("/bidder/dashboard");
@@ -169,6 +161,19 @@ export default function BidderLogin() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                Registered Legal Entity Name
+              </label>
+              <input
+                type="text"
+                required
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="Enter the legal entity shown on your documents"
+                className="w-full px-3 py-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest text-xs text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
             <div>
               <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
                 Bidder Registered Email

@@ -8,7 +8,7 @@ interactive API docs at /docs.
 """
 
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Any
 from datetime import datetime
 
 
@@ -29,11 +29,22 @@ class BidderOut(BidderCreate):
         from_attributes = True  # lets Pydantic read directly from SQLAlchemy objects
 
 
+class BidderUpdate(BaseModel):
+    company_name: Optional[str] = None
+    pan_number: Optional[str] = None
+    gstin: Optional[str] = None
+    udyam_number: Optional[str] = None
+    tender_id: Optional[str] = None
+
+
 class DocumentOut(BaseModel):
     id: int
     doc_type: str
     verification_status: str
     extracted_fields: Optional[str]
+    extracted_text: Optional[str] = None
+    file_name: Optional[str] = None
+    file_url: Optional[str] = None
     uploaded_at: datetime
 
     class Config:
@@ -52,3 +63,33 @@ class ComplianceResult(BaseModel):
 class OfficerDecision(BaseModel):
     decision: str          # "qualified" or "disqualified"
     remarks: Optional[str] = None
+
+
+class ExtractedFieldUpdate(BaseModel):
+    field_name: str
+    value: Any
+
+
+class TenderRequirementOut(BaseModel):
+    requirement_key: str
+    label: str
+    mandatory: bool
+    minimum_value: Optional[float] = None
+    unit: Optional[str] = None
+    verification_type: str
+    source_evidence: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class TenderOut(BaseModel):
+    id: str
+    name: str
+    department: Optional[str] = None
+    status: str
+    created_at: datetime
+    requirements: list[TenderRequirementOut] = []
+
+    class Config:
+        from_attributes = True

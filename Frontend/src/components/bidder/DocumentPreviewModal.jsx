@@ -1,10 +1,31 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FileText, CheckCircle2, AlertCircle, Clock, X, Calendar, HardDrive, Hash, Shield } from "lucide-react";
 import Modal from "../common/Modal";
 import Button from "../common/Button";
 import StatusBadge from "../common/StatusBadge";
 
 export default function DocumentPreviewModal({ isOpen, onClose, document: doc }) {
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+  useEffect(() => {
+    if (!isOpen || !doc?.fileUrl) return undefined;
+    let objectUrl;
+    fetch(doc.fileUrl)
+      .then((response) => {
+        if (!response.ok) throw new Error("The uploaded file is unavailable.");
+        return response.blob();
+      })
+      .then((blob) => {
+        objectUrl = URL.createObjectURL(blob);
+        setPreviewUrl(objectUrl);
+      })
+      .catch(() => setPreviewUrl(null));
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      setPreviewUrl(null);
+    };
+  }, [isOpen, doc?.fileUrl]);
+
   if (!doc) return null;
 
   return (
@@ -23,37 +44,20 @@ export default function DocumentPreviewModal({ isOpen, onClose, document: doc })
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-on-surface">{doc.fileName || `${doc.type}_Document.pdf`}</h4>
+              <h4 className="text-sm font-bold text-on-surface">{doc.fileName || "Uploaded document"}</h4>
               <div className="flex items-center gap-2 text-xs text-on-surface-variant mt-0.5">
                 <span className="font-mono">{doc.type}</span>
                 <span>•</span>
-                <span>{doc.fileSize || "1.8 MB"}</span>
+                <span>{doc.fileSize ? `${doc.fileSize} bytes` : "Size unavailable"}</span>
                 <span>•</span>
-                <span>Uploaded on {doc.uploadDate || "20 Aug 2026"}</span>
+                <span>Uploaded on {doc.uploadDate || "date unavailable"}</span>
               </div>
             </div>
           </div>
           <StatusBadge status={doc.status} size="sm" />
         </div>
 
-        {/* Mock Document Render Window */}
-        <div className="border border-outline-variant rounded-lg p-6 bg-surface-container-lowest flex flex-col items-center justify-center min-h-[220px] text-center space-y-3">
-          <div className="w-14 h-14 rounded-full bg-primary-fixed/40 flex items-center justify-center text-primary">
-            <FileText className="w-7 h-7" />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-on-surface">
-              {doc.fileName || `${doc.name}.pdf`}
-            </p>
-            <p className="text-[11px] text-on-surface-variant mt-0.5">
-              Secure GeM Document Repository · SHA-256 Verified
-            </p>
-          </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold border border-green-200">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Document Integrity Verified</span>
-          </div>
-        </div>
+        {previewUrl ? <object data={previewUrl} type="application/pdf" className="w-full h-80 border border-outline-variant rounded-lg"><a href={previewUrl} target="_blank" rel="noreferrer">Open uploaded PDF</a></object> : <p className="text-xs text-on-surface-variant">Loading the uploaded file preview…</p>}
 
         {/* Basic Extracted Fields Preview (Clean, bidder-appropriate) */}
         {doc.extractedFields && Object.keys(doc.extractedFields).length > 0 && (

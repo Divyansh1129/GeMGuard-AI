@@ -69,7 +69,7 @@ export default function BidderTopbar({ onMenuClick }) {
               Bidder Profile
             </span>
             <span className="text-[10px] text-on-surface-variant leading-tight">
-              ABC Technologies
+              {state?.bidderName || "Bidder"}
             </span>
           </div>
         </div>

@@ -45,6 +45,9 @@ export const api = {
   async put(endpoint, body) {
     return request("PUT", endpoint, body);
   },
+  async patch(endpoint, body) {
+    return request("PATCH", endpoint, body);
+  },
 };
 
 export { API_BASE_URL };

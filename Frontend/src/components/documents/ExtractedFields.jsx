@@ -41,7 +41,7 @@ export default function ExtractedFields({
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold px-2 py-0.5 rounded bg-green-50 text-green-700 border border-green-200">
-            {doc?.ocrConfidence || 96}% OCR Confidence
+            {doc?.ocrConfidence ?? "—"}% OCR Confidence
           </span>
         </div>
       </div>
@@ -141,8 +141,8 @@ export default function ExtractedFields({
           </p>
 
           <div className="flex items-center gap-4 mt-2.5 pt-2 border-t border-black/5 text-[11px] text-on-surface-variant font-medium">
-            <span>OCR Confidence: <strong>{doc?.ocrConfidence || 96}%</strong></span>
-            <span>Verification Confidence: <strong>{doc?.verificationConfidence || 98}%</strong></span>
+            <span>OCR Confidence: <strong>{doc?.ocrConfidence ?? "—"}%</strong></span>
+            <span>Verification Confidence: <strong>{doc?.verificationConfidence ?? "—"}%</strong></span>
           </div>
         </div>
       </div>

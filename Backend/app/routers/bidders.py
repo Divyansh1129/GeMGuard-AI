@@ -47,3 +47,17 @@ def get_bidder(bidder_id: int, db: Session = Depends(get_db)):
 @router.get("/", response_model=list[schemas.BidderOut])
 def list_bidders(db: Session = Depends(get_db)):
     return db.query(models.Bidder).all()
+
+
+@router.patch("/{bidder_id}", response_model=schemas.BidderOut)
+def update_bidder(bidder_id: int, update: schemas.BidderUpdate, db: Session = Depends(get_db)):
+    bidder = db.query(models.Bidder).filter(models.Bidder.id == bidder_id).first()
+    if not bidder:
+        raise HTTPException(status_code=404, detail="Bidder not found")
+    changed = update.model_dump(exclude_unset=True)
+    for field, value in changed.items():
+        setattr(bidder, field, value)
+    db.add(models.AuditLog(bidder_id=bidder_id, event_type="bidder_profile_updated", actor="bidder", details=str(sorted(changed))))
+    db.commit()
+    db.refresh(bidder)
+    return bidder
