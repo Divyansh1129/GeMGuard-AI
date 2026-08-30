@@ -15,6 +15,7 @@ import RiskBadge from "../components/common/RiskBadge";
 import Button from "../components/common/Button";
 import tenderService from "../services/tenderService";
 import bidderService from "../services/bidderService";
+import { showToast } from "../components/common/Toast";
 
 export default function TenderDetails() {
   const { tenderId } = useParams();
@@ -24,16 +25,39 @@ export default function TenderDetails() {
   const [tender, setTender] = useState(null);
   const [bidders, setBidders] = useState([]);
   const [search, setSearch] = useState("");
+  const [rechecking, setRechecking] = useState(false);
+
+  const loadTenderData = async () => {
+    const [t, b] = await Promise.all([
+      tenderService.getById(decodedId),
+      bidderService.getByTender(decodedId),
+    ]);
+    setTender(t);
+    setBidders(b);
+  };
 
   useEffect(() => {
-    async function load() {
-      const t = await tenderService.getById(decodedId);
-      const b = await bidderService.getByTender(decodedId);
-      setTender(t);
-      setBidders(b);
-    }
-    load();
+    loadTenderData();
   }, [decodedId]);
+
+  const handleRefreshAndRecheck = async () => {
+    setRechecking(true);
+    try {
+      const linkedBidders = await bidderService.getByTender(decodedId);
+      await Promise.all(linkedBidders.map((bidder) => bidderService.runComplianceCheck(bidder.id)));
+      await loadTenderData();
+      showToast(
+        linkedBidders.length
+          ? `Rechecked ${linkedBidders.length} linked bidder(s) against this tender.`
+          : "Tender refreshed. Link a bidder to this tender to run its compliance check.",
+        "success"
+      );
+    } catch (error) {
+      showToast(error.message || "Unable to refresh tender compliance.", "error");
+    } finally {
+      setRechecking(false);
+    }
+  };
 
   if (!tender) {
     return (
@@ -74,11 +98,22 @@ export default function TenderDetails() {
             </div>
             <h1 className="text-2xl font-bold text-on-surface">{tender.name}</h1>
             <p className="text-xs text-on-surface-variant mt-0.5">
-              {tender.department} · Deadline: {tender.deadline} · Est. Value: {tender.value}
+              {tender.department || "Department not supplied"} · {tender.requirements?.length || 0} extracted requirements
             </p>
           </div>
 
-          <StatusBadge status={tender.status} />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              icon={RefreshCw}
+              disabled={rechecking}
+              onClick={handleRefreshAndRecheck}
+            >
+              {rechecking ? "Rechecking…" : "Refresh & Recheck"}
+            </Button>
+            <StatusBadge status={tender.status} />
+          </div>
         </div>
       </div>
 

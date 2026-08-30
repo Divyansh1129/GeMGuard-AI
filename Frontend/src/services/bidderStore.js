@@ -12,7 +12,7 @@ import api, { API_BASE_URL } from "./api";
 import documentService from "./documentService";
 import bidderService from "./bidderService";
 
-const AUTH_KEY = "gem_rakshak_bidder_auth";
+const AUTH_KEY = "gemguard_bidder_auth_v2";
 
 // The 8 statutory document types from the problem statement. `type` is
 // what the UI displays; `backendType` is what gets sent to/matched against
@@ -99,7 +99,24 @@ async function refreshFromBackend() {
 
   try {
     const { data: bidder } = await api.get(`/bidders/${auth.bidderRealId}`);
-    let backendDocs = [];
+    const normalizedAuthName = (auth.companyName || "").trim().toUpperCase();
+    const normalizedBidderName = (bidder.company_name || "").trim().toUpperCase();
+    if (
+      normalizedAuthName &&
+      currentState.bidderName === auth.companyName &&
+      normalizedAuthName !== normalizedBidderName
+    ) {
+      const { data: bidders } = await api.get("/bidders/");
+      const matchingBidder = bidders.find(
+        (item) => (item.company_name || "").trim().toUpperCase() === normalizedAuthName
+      );
+      if (matchingBidder) {
+        saveAuth({ ...auth, bidderRealId: matchingBidder.id, companyName: matchingBidder.company_name });
+        await refreshFromBackend();
+        return;
+      }
+      throw new Error("Bidder not found");
+    }    let backendDocs = [];
     try {
       const { data } = await api.get(`/documents/${auth.bidderRealId}`);
       backendDocs = data;
@@ -172,6 +189,30 @@ async function refreshFromBackend() {
     };
     notify();
   } catch (err) {
+    if (err?.message === "Bidder not found") {
+      try {
+        const { data: bidder } = await api.post("/bidders/", {
+          company_name: currentState.bidderName || auth.companyName || auth.email || "New Bidder",
+          company_type: "Unspecified",
+          pan_number: null,
+          gstin: null,
+          udyam_number: null,
+          tender_id: auth.tenderId || null,
+        });
+        saveAuth({ ...auth, bidderRealId: bidder.id, companyName: bidder.company_name });
+        currentState = {
+          ...buildDefaultState(),
+          bidId: String(bidder.id),
+          bidderId: String(bidder.id),
+          bidderName: bidder.company_name,
+        };
+        notify();
+        await refreshFromBackend();
+        return;
+      } catch (creationError) {
+        console.error("bidderStore: failed to recreate the missing bidder", creationError);
+      }
+    }
     console.error("bidderStore: failed to refresh from backend", err);
   }
 }
@@ -196,10 +237,10 @@ export const bidderStore = {
   // Real upload — sends the file to your backend (OCR + LLM extraction),
   // then refreshes state so the UI reflects the real extracted result.
   async uploadDocument(type, fileObj) {
+    await refreshFromBackend();
     const auth = getAuth();
     if (!auth?.bidderRealId) {
-      console.error("bidderStore.uploadDocument: no logged-in bidder with a real backend ID");
-      return currentState;
+      throw new Error("Your bidder profile could not be loaded. Please refresh and try again.");
     }
     const def = DOC_CHECKLIST.find((d) => d.type === type || d.id === type);
     const backendType = def?.backendType || type.toLowerCase();

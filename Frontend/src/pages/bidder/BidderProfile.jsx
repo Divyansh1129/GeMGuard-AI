@@ -19,24 +19,37 @@ export default function BidderProfile() {
   useEffect(() => {
     const unsubscribe = bidderStore.subscribe((newState) => {
       setState(newState);
+      setCompanyName(newState.bidderName || "");
+      setGstin(newState.gstin || "");
+      setPan(newState.pan || "");
+      setUdyamNumber(newState.udyamNumber || "");
+      setTenderId(newState.tenderId === "N/A" ? "" : (newState.tenderId || ""));
+      setContactPerson(newState.contactPerson || "");
+      setContactEmail(newState.contactEmail || "");
+      setContactPhone(newState.contactPhone || "");
+      setAddress(newState.address || "");
     });
     return unsubscribe;
   }, []);
 
   const handleSave = async (e) => {
     e.preventDefault();
-    await bidderStore.updateProfile({
-      bidderName: companyName,
-      gstin,
-      pan,
-      udyamNumber,
-      tenderId,
-      contactPerson,
-      contactEmail,
-      contactPhone,
-      address,
-    });
-    showToast("✓ Bidder profile updated successfully", "success");
+    try {
+      await bidderStore.updateProfile({
+        bidderName: companyName,
+        gstin,
+        pan,
+        udyamNumber,
+        tenderId,
+        contactPerson,
+        contactEmail,
+        contactPhone,
+        address,
+      });
+      showToast("Bidder profile updated successfully", "success");
+    } catch (error) {
+      showToast(error.message || "Unable to save the bidder profile.", "error");
+    }
   };
 
   return (

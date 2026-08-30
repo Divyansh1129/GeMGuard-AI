@@ -153,6 +153,7 @@ export const bidderService = {
       pan_number: bidderData.pan,
       gstin: bidderData.gstin,
       udyam_number: bidderData.udyamNumber,
+      tender_id: bidderData.tenderId || null,
     });
     return mapBidder(data, complianceCache.get(Number(id)) || null, null);
   },

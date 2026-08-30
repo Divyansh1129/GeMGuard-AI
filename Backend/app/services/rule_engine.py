@@ -54,8 +54,36 @@ def run_rule_checks(bidder: dict, documents: dict, tender_requirements: list[dic
         results["udyam_format"] = {"pass": bool(UDYAM_RE.fullmatch(declared_udyam)), "detail": "Declared Udyam number has a valid format." if UDYAM_RE.fullmatch(declared_udyam) else "Declared Udyam number format is invalid or missing."}
         results["udyam_document_match"] = {"pass": bool(extracted_udyam and extracted_udyam == declared_udyam), "detail": "Udyam number matches uploaded evidence." if extracted_udyam == declared_udyam and extracted_udyam else "Udyam number could not be matched to uploaded evidence."}
 
+    expected_values = {
+        item.get("requirement_key"): (item.get("source_evidence") or "").upper()
+        for item in (tender_requirements or [])
+        if item.get("requirement_key") in {"expected_pan", "expected_gstin", "expected_udyam_number", "expected_legal_name"}
+    }
+    for requirement_key, profile_key, extracted_value, label in [
+        ("expected_pan", "pan_number", extracted_pan, "PAN"),
+        ("expected_gstin", "gstin", extracted_gstin, "GSTIN"),
+        ("expected_udyam_number", "udyam_number", extracted_udyam, "Udyam registration number"),
+    ]:
+        expected = expected_values.get(requirement_key)
+        if expected:
+            declared = (bidder.get(profile_key) or "").upper()
+            matches = declared == expected and extracted_value == expected
+            results[f"tender_{requirement_key}_match"] = {
+                "pass": matches,
+                "detail": f"Tender-required {label} matches the bidder declaration and uploaded evidence." if matches else f"Tender requires {label} '{expected}', but the bidder declaration or uploaded evidence differs.",
+            }
     names = [(kind, name) for kind, data in documents.items() if (name := data.get("fields", {}).get("legal_name"))]
     normalized = [(kind, original, _normalise_name(original)) for kind, original in names]
+    expected_legal_name = expected_values.get("expected_legal_name")
+    if expected_legal_name:
+        profile_matches_tender = _normalise_name(bidder.get("company_name")) == _normalise_name(expected_legal_name)
+        extracted_names_match_tender = bool(normalized) and all(
+            value == _normalise_name(expected_legal_name) for _, _, value in normalized
+        )
+        results["tender_expected_legal_name_match"] = {
+            "pass": profile_matches_tender and extracted_names_match_tender,
+            "detail": "Tender-required legal entity matches the bidder profile and document evidence." if profile_matches_tender and extracted_names_match_tender else f"Tender requires legal entity '{expected_legal_name}', but the bidder profile or document evidence differs.",
+        }
     if normalized:
         consensus = Counter(value for _, _, value in normalized).most_common(1)[0][0]
         mismatches = [kind for kind, _, value in normalized if value != consensus]

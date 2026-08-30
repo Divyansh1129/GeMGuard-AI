@@ -30,7 +30,7 @@ def run_compliance_check(bidder_id: int, db: Session = Depends(get_db)):
 
     documents = _latest_documents(db, bidder_id)
     tender = db.get(models.Tender, bidder.tender_id) if bidder.tender_id else None
-    requirements = ([{"requirement_key": item.requirement_key, "mandatory": bool(item.mandatory), "minimum_value": item.minimum_value} for item in tender.requirements] if tender else [])
+    requirements = ([{"requirement_key": item.requirement_key, "mandatory": bool(item.mandatory), "minimum_value": item.minimum_value, "source_evidence": item.source_evidence} for item in tender.requirements] if tender else [])
     rule_results = rule_engine.run_rule_checks({"company_name": bidder.company_name, "pan_number": bidder.pan_number, "gstin": bidder.gstin, "udyam_number": bidder.udyam_number}, documents, requirements)
     if not tender:
         rule_results["tender_requirements"] = {"pass": False, "detail": "No uploaded tender is linked to this bidder; tender-specific evaluation is pending."}

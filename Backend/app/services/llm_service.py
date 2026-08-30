@@ -123,8 +123,23 @@ def extract_tender_requirements(raw_text: str) -> list[dict]:
     match = re.search(r"(?:local content|Make in India).{0,80}?(\d{1,3})\s*%", text, re.IGNORECASE)
     if match:
         requirements.append({"requirement_key": "local_content", "label": "Local Content", "mandatory": True, "minimum_value": float(match.group(1)), "unit": "percentage", "verification_type": "document_evidence", "source_evidence": match.group(0)})
+    expected_patterns = [
+        ("expected_legal_name", "Required legal entity", r"(?:required\s+)?(?:bidder\s+)?legal\s+entity\s*[:\-]\s*([^\n\r]+)"),
+        ("expected_pan", "Required PAN", r"(?:required\s+)?PAN(?:\s+(?:number|ID))?\s*[:\-]\s*([A-Z]{5}\d{4}[A-Z])"),
+        ("expected_gstin", "Required GSTIN", r"(?:required\s+)?GSTIN\s*[:\-]\s*([0-9]{2}[A-Z]{5}\d{4}[A-Z][0-9A-Z]Z[0-9A-Z])"),
+        ("expected_udyam_number", "Required Udyam registration", r"(?:required\s+)?Udyam(?:\s+(?:registration\s+)?(?:number|no\.?))?\s*[:\-]\s*(UDYAM-[A-Z]{2}-\d{2}-\d{7})"),
+    ]
+    for key, label, pattern in expected_patterns:
+        match = re.search(pattern, raw_text, re.IGNORECASE)
+        if match:
+            requirements.append({
+                "requirement_key": key,
+                "label": label,
+                "mandatory": True,
+                "verification_type": "value_match",
+                "source_evidence": " ".join(match.group(1).strip().rstrip(".").split()).upper(),
+            })
     return requirements
-
 
 def generate_recommendation(bidder_name: str, rule_results: dict, ml_risk_prob: float,
                              compliance_score: float, risk_level: str) -> str:
