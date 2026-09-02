@@ -37,6 +37,23 @@ class BidderUpdate(BaseModel):
     tender_id: Optional[str] = None
 
 
+class FieldCheckOut(BaseModel):
+    field_name: str
+    status: str
+    reason: str
+    compared_against: Optional[str] = None
+    required: bool = True
+    rule_key: str
+
+class DocumentVerificationResultOut(BaseModel):
+    document_id: int
+    document_type: str
+    extraction_confidence: Optional[float] = None
+    extracted_fields: dict = {}
+    field_checks: list[FieldCheckOut] = []
+    overall_status: str
+    overall_score: int
+
 class DocumentOut(BaseModel):
     id: int
     doc_type: str
@@ -46,6 +63,7 @@ class DocumentOut(BaseModel):
     file_name: Optional[str] = None
     file_url: Optional[str] = None
     uploaded_at: datetime
+    verification_result: Optional[DocumentVerificationResultOut] = None
 
     class Config:
         from_attributes = True
@@ -58,6 +76,7 @@ class ComplianceResult(BaseModel):
     rule_engine_result: dict
     ml_risk_probability: float
     ai_recommendation: str
+    document_results: list[DocumentVerificationResultOut] = []
 
 
 class OfficerDecision(BaseModel):

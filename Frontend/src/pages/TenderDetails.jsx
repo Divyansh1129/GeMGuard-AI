@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   ChevronRight,
   Search,
+  RefreshCw,
 } from "lucide-react";
 import KPICard from "../components/common/KPICard";
 import StatusBadge from "../components/common/StatusBadge";
@@ -24,16 +25,37 @@ export default function TenderDetails() {
 
   const [tender, setTender] = useState(null);
   const [bidders, setBidders] = useState([]);
+  const [availableBidders, setAvailableBidders] = useState([]);
+  const [selectedBidderId, setSelectedBidderId] = useState("");
+  const [linking, setLinking] = useState(false);
   const [search, setSearch] = useState("");
   const [rechecking, setRechecking] = useState(false);
 
   const loadTenderData = async () => {
-    const [t, b] = await Promise.all([
+    const [t, b, allBidders] = await Promise.all([
       tenderService.getById(decodedId),
       bidderService.getByTender(decodedId),
+      bidderService.getAll(),
     ]);
     setTender(t);
     setBidders(b);
+    setAvailableBidders(allBidders);
+  };
+
+  const handleLinkBidder = async () => {
+    if (!selectedBidderId) return;
+    setLinking(true);
+    try {
+      await bidderService.linkToTender(selectedBidderId, decodedId);
+      await bidderService.runComplianceCheck(selectedBidderId);
+      await loadTenderData();
+      setSelectedBidderId("");
+      showToast("Bidder linked and compared against this tender.", "success");
+    } catch (error) {
+      showToast(error.message || "Unable to link bidder to this tender.", "error");
+    } finally {
+      setLinking(false);
+    }
   };
 
   useEffect(() => {
@@ -102,7 +124,23 @@ export default function TenderDetails() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={selectedBidderId}
+              onChange={(event) => setSelectedBidderId(event.target.value)}
+              disabled={linking}
+              className="px-2.5 py-1.5 text-xs rounded border border-outline-variant bg-surface-container-lowest text-on-surface focus:outline-none focus:border-primary max-w-52"
+            >
+              <option value="">Link uploaded bidder…</option>
+              {availableBidders
+                .filter((bidder) => bidder.tenderId === "N/A" || bidder.tenderId === decodedId)
+                .map((bidder) => (
+                  <option key={bidder.id} value={bidder.id}>{bidder.name} (#{bidder.id})</option>
+                ))}
+            </select>
+            <Button variant="primary" size="sm" disabled={!selectedBidderId || linking} onClick={handleLinkBidder}>
+              {linking ? "Linking…" : "Link & Compare"}
+            </Button>
             <Button
               variant="outline"
               size="sm"

@@ -71,6 +71,7 @@ class Document(Base):
     extracted_text = Column(Text)          # raw OCR output
     extracted_fields = Column(Text)        # JSON string of LLM-extracted fields
     verification_status = Column(String, default="pending")  # pending / verified / mismatch / invalid
+    verification_result = Column(Text)  # reconciled DocumentVerificationResult JSON
     uploaded_at = Column(DateTime, default=datetime.utcnow)
 
     bidder = relationship("Bidder", back_populates="documents")

@@ -13,6 +13,9 @@ import documentService from "./documentService";
 import bidderService from "./bidderService";
 
 const AUTH_KEY = "gemguard_bidder_auth_v2";
+// Migrates sessions created before the backend-backed bidder flow. Without it,
+// the UI opens but has no bidderRealId, so uploads and profile updates fail.
+const LEGACY_AUTH_KEY = "gem_rakshak_bidder_auth";
 
 // The 8 statutory document types from the problem statement. `type` is
 // what the UI displays; `backendType` is what gets sent to/matched against
@@ -30,10 +33,23 @@ const DOC_CHECKLIST = [
 
 function getAuth() {
   try {
-    return JSON.parse(localStorage.getItem(AUTH_KEY));
+    const current = JSON.parse(localStorage.getItem(AUTH_KEY));
+    if (current?.bidderRealId) return current;
+
+    const legacy = JSON.parse(localStorage.getItem(LEGACY_AUTH_KEY));
+    if (legacy?.bidderRealId) {
+      const migrated = { ...legacy, bidderRealId: Number(legacy.bidderRealId) };
+      localStorage.setItem(AUTH_KEY, JSON.stringify(migrated));
+      return migrated;
+    }
+    return current || legacy || null;
   } catch {
     return null;
   }
+}
+
+function saveAuth(auth) {
+  localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
 }
 
 function blankDocs() {
@@ -190,28 +206,12 @@ async function refreshFromBackend() {
     notify();
   } catch (err) {
     if (err?.message === "Bidder not found") {
-      try {
-        const { data: bidder } = await api.post("/bidders/", {
-          company_name: currentState.bidderName || auth.companyName || auth.email || "New Bidder",
-          company_type: "Unspecified",
-          pan_number: null,
-          gstin: null,
-          udyam_number: null,
-          tender_id: auth.tenderId || null,
-        });
-        saveAuth({ ...auth, bidderRealId: bidder.id, companyName: bidder.company_name });
-        currentState = {
-          ...buildDefaultState(),
-          bidId: String(bidder.id),
-          bidderId: String(bidder.id),
-          bidderName: bidder.company_name,
-        };
-        notify();
-        await refreshFromBackend();
-        return;
-      } catch (creationError) {
-        console.error("bidderStore: failed to recreate the missing bidder", creationError);
-      }
+      // A deleted profile must never be silently recreated from stale browser data.
+      localStorage.removeItem(AUTH_KEY);
+      localStorage.removeItem(LEGACY_AUTH_KEY);
+      currentState = buildDefaultState();
+      notify();
+      return;
     }
     console.error("bidderStore: failed to refresh from backend", err);
   }

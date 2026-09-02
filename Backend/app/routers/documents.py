@@ -32,6 +32,17 @@ router = APIRouter(prefix="/documents", tags=["Documents"])
 
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 
+def _serialize_document(doc):
+    try:
+        result = json.loads(doc.verification_result) if doc.verification_result else None
+    except json.JSONDecodeError:
+        result = None
+    if result is None:
+        try: fields = json.loads(doc.extracted_fields or "{}")
+        except json.JSONDecodeError: fields = {}
+        result = {"document_id": doc.id, "document_type": doc.doc_type, "extraction_confidence": fields.get("confidence"), "extracted_fields": fields, "field_checks": [{"field_name":"document","status":"needs_review","reason":"Pre-migration record, recompute required.","compared_against":None,"required":True,"rule_key":"pre_migration"}], "overall_status":"needs_review", "overall_score":50}
+    return {"id":doc.id,"doc_type":doc.doc_type,"verification_status":doc.verification_status,"extracted_fields":doc.extracted_fields,"extracted_text":doc.extracted_text,"uploaded_at":doc.uploaded_at,"verification_result":result}
+
 
 @router.post("/upload/{bidder_id}", response_model=schemas.DocumentOut)
 async def upload_document(

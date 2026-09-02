@@ -19,6 +19,11 @@ from app.routers import bidders, documents, compliance, dashboard
 
 # Create tables (SQLite) — in prod you'd use Alembic migrations instead
 Base.metadata.create_all(bind=engine)
+# Lightweight SQLite migration for pre-result databases.
+with engine.begin() as connection:
+    columns = {row[1] for row in connection.exec_driver_sql("PRAGMA table_info(documents)")}
+    if "verification_result" not in columns:
+        connection.exec_driver_sql("ALTER TABLE documents ADD COLUMN verification_result TEXT")
 
 app = FastAPI(
     title="GeMGuard AI — AI Bid Compliance Verification Platform",

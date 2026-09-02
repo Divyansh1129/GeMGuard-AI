@@ -23,18 +23,24 @@ export default function BidderLogin() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await api.post("/bidders/", {
-        company_name: companyName.trim(),
-        company_type: "Unspecified",
-        pan_number: null,
-        gstin: null,
-        udyam_number: null,
-        tender_id: null,
-      });
-      const bidderRealId = data.id;
+      const normalizedCompanyName = companyName.trim().replace(/\s+/g, " ").toUpperCase();
+      const { data: existingBidders } = await api.get("/bidders/");
+      const existingBidder = existingBidders.find(
+        (bidder) => (bidder.company_name || "").trim().replace(/\s+/g, " ").toUpperCase() === normalizedCompanyName
+      );
+      const bidderRealId = existingBidder
+        ? existingBidder.id
+        : (await api.post("/bidders/", {
+            company_name: companyName.trim(),
+            company_type: "Unspecified",
+            pan_number: null,
+            gstin: null,
+            udyam_number: null,
+            tender_id: null,
+          })).data.id;
 
       localStorage.setItem(
-        "gem_rakshak_bidder_auth",
+        "gemguard_bidder_auth_v2",
         JSON.stringify({
           email,
           role: "bidder",

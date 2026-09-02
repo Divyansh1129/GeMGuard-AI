@@ -124,6 +124,11 @@ export const bidderService = {
     return data;
   },
 
+  async linkToTender(bidderId, tenderId) {
+    const { data } = await api.patch(`/bidders/${bidderId}`, { tender_id: tenderId });
+    complianceCache.delete(Number(bidderId));
+    return data;
+  },
   async updateStatus(bidderId, status, remarks) {
     const decision = status === "Non-Compliant" ? "disqualified" : "qualified";
     const { data } = await api.post(`/compliance/${bidderId}/decision`, {
