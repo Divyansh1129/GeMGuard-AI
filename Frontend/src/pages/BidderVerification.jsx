@@ -30,10 +30,9 @@ import bidderService from "../services/bidderService";
 import documentService from "../services/documentService";
 import api from "../services/api";
 
-const normaliseEntityName = (value = "") => value.toLowerCase()
-  .replace(/\bprivate\s+limited\b|\bpvt\.?\s*ltd\.?\b/g, "privatelimited")
-  .replace(/\blimited\b|\bltd\.?\b/g, "limited")
-  .replace(/[^a-z0-9]/g, "");
+// NOTE: normaliseEntityName has been REMOVED. All name-consistency checks
+// are now performed by the backend rule_engine and delivered via
+// compliance.document_results[].field_checks.
 
 export default function BidderVerification() {
   const { bidderId } = useParams();
@@ -52,7 +51,23 @@ export default function BidderVerification() {
       const docs = await documentService.getByBidder(currentBidderId);
       let latest = null;
       try { latest = await bidderService.runComplianceCheck(currentBidderId); } catch (error) { console.error(error); }
-      const iss = Object.entries(latest?.rule_engine_result || {}).filter(([, value]) => !value.pass).map(([key, value]) => ({ id: key, title: key.replaceAll("_", " "), description: value.detail, reviewed: false, severity: "warning", aiConfidence: Math.round((1 - (latest?.ml_risk_probability || 0)) * 100), affectedDocuments: [key.split("_")[0]], recommendedAction: "Review uploaded evidence" }));
+
+      // Build issues from rule_engine_result — use applies_to from the rule
+      // itself, never infer from key.split("_")[0].
+      const iss = Object.entries(latest?.rule_engine_result || {})
+        .filter(([, value]) => !value.pass)
+        .map(([key, value]) => ({
+          id: key,
+          title: key.replaceAll("_", " "),
+          description: value.detail,
+          reviewed: false,
+          severity: "warning",
+          aiConfidence: Math.round((1 - (latest?.ml_risk_probability || 0)) * 100),
+          // Use the rule's explicit applies_to list instead of string parsing
+          affectedDocuments: value.applies_to || [],
+          recommendedAction: "Review uploaded evidence",
+        }));
+
       let aud = [];
       try {
         const { data } = await api.get(`/dashboard/${currentBidderId}/audit`);
@@ -189,16 +204,8 @@ export default function BidderVerification() {
           {/* Document Checklist Table */}
           <DocumentChecklist documents={documents} bidderId={bidder.id} />
 
-          {/* Cross Document Verification */}
-          <CrossDocVerification entityComparisons={(() => {
-            const values = documents.map((doc) => ({ doc, name: doc.extractedFields?.legal_name || "" })).filter((item) => item.name);
-            const counts = values.reduce((result, item) => ({ ...result, [normaliseEntityName(item.name)]: (result[normaliseEntityName(item.name)] || 0) + 1 }), {});
-            const consensus = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
-            return documents.map((doc) => {
-              const name = doc.extractedFields?.legal_name || "Not extracted";
-              return { doc: doc.type, name, status: normaliseEntityName(name) && normaliseEntityName(name) === consensus ? "match" : "mismatch" };
-            });
-          })()} />
+          {/* Cross Document Verification — uses backend document_results only */}
+          <CrossDocVerification documentResults={compliance?.document_results || []} />
 
           {/* AI Compliance Assessment */}
           <AIAssessment confidence={compliance ? Math.round((1 - compliance.ml_risk_probability) * 100) : 0} status={bidder.status.toUpperCase()} findings={issuesList.map((issue) => ({ type: "warning", text: issue.description }))} reasoning={compliance?.ai_recommendation || "Run a compliance check after documents are uploaded."} recommendation={compliance?.ai_recommendation || "No assessment is available yet."} />

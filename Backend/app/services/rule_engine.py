@@ -33,7 +33,7 @@ def run_rule_checks(bidder, documents, tender_requirements=None):
     document_types = list(documents)
     for kind in required & {"pan","gst","udyam","epfo","esic","non_blacklisting","startup_india","oem_auth"}:
         _check(results, f"{kind}_submitted", [kind], "document", "pass" if documents.get(kind) else "fail", "Uploaded document processed." if documents.get(kind) else "Required document has not been uploaded.")
-    checks = [("pan", "pan_number", "pan", PAN_RE, "PAN"), ("gst", "gstin", "gstin", valid_gstin, "GSTIN"), ("udyam", "udyam_number", "udyam_number", UDYAM_RE.fullmatch, "Udyam number")]
+    checks = [("pan", "pan_number", "pan", PAN_RE.fullmatch, "PAN"), ("gst", "gstin", "gstin", valid_gstin, "GSTIN"), ("udyam", "udyam_number", "udyam_number", UDYAM_RE.fullmatch, "Udyam number")]
     for kind, profile_key, field, validator, label in checks:
         if kind not in required: continue
         declared = (bidder.get(profile_key) or "").upper()
@@ -71,7 +71,13 @@ def build_document_results(documents, rules):
         checks=[{"field_name":r["field_name"],"status":r["status"],"reason":r["detail"],"compared_against":r["compared_against"],"required":r["required"],"rule_key":key} for key,r in rules.items() if kind in r["applies_to"]]
         if not checks: checks=[{"field_name":"document","status":"needs_review","reason":"No compliance checks apply yet; recompute required.","compared_against":None,"required":True,"rule_key":"unverified"}]
         status="fail" if any(c["status"]=="fail" and c["required"] for c in checks) else "needs_review" if any(c["status"]=="needs_review" for c in checks) else "pass"
-        score=0 if status=="fail" else 50 if status=="needs_review" else 100
+        required_checks = [c for c in checks if c["required"]]
+        if required_checks:
+            passing = sum(1 for c in required_checks if c["status"] == "pass")
+            raw = round(100 * passing / len(required_checks))
+        else:
+            raw = 100 if status == "pass" else 50
+        score = min(raw, 50) if status == "needs_review" else raw
         output.append({"document_id":document["id"],"document_type":kind,"extraction_confidence":document.get("fields",{}).get("confidence"),"extracted_fields":document.get("fields",{}),"field_checks":checks,"overall_status":status,"overall_score":score})
     return output
 

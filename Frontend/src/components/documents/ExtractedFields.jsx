@@ -1,7 +1,13 @@
 import React, { useState } from "react";
-import { Edit2, Check, X, Sparkles, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Edit2, Check, X, Sparkles, CheckCircle2, AlertTriangle, ShieldCheck } from "lucide-react";
 import Button from "../common/Button";
 import { showToast } from "../common/Toast";
+
+function FieldCheckBadge({ status }) {
+  if (status === "pass") return <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-50 text-green-700 border border-green-200">PASS</span>;
+  if (status === "fail") return <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200">FAIL</span>;
+  return <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">REVIEW</span>;
+}
 
 export default function ExtractedFields({
   document: doc,
@@ -28,6 +34,8 @@ export default function ExtractedFields({
     setEditValue("");
   };
 
+  const fieldChecks = doc?.fieldChecks || [];
+
   return (
     <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-lg p-5 flex flex-col h-full">
       <div className="flex items-center justify-between pb-3 border-b border-outline-variant/40 mb-4">
@@ -41,7 +49,7 @@ export default function ExtractedFields({
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold px-2 py-0.5 rounded bg-green-50 text-green-700 border border-green-200">
-            {doc?.ocrConfidence ?? "—"}% OCR Confidence
+            {doc?.ocrConfidence ?? "—"}% Extraction Confidence
           </span>
         </div>
       </div>
@@ -101,7 +109,7 @@ export default function ExtractedFields({
                   </div>
                 ) : (
                   <div className="text-xs font-semibold text-on-surface font-mono break-words">
-                    {value}
+                    {typeof value === "object" ? JSON.stringify(value) : String(value ?? "")}
                   </div>
                 )}
               </div>
@@ -109,7 +117,44 @@ export default function ExtractedFields({
           })}
       </div>
 
-      {/* Verification Result Section */}
+      {/* Backend Field Checks — compliance checks per field */}
+      {fieldChecks.length > 0 && (
+        <div className="mt-5 pt-4 border-t border-outline-variant/40">
+          <h4 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+            Compliance Field Checks
+          </h4>
+          <div className="space-y-2">
+            {fieldChecks.map((check, idx) => (
+              <div
+                key={`${check.rule_key}-${idx}`}
+                className={`p-3 rounded-lg border text-xs ${
+                  check.status === "pass"
+                    ? "bg-green-50/50 border-green-200"
+                    : check.status === "fail"
+                    ? "bg-red-50/50 border-red-200"
+                    : "bg-amber-50/50 border-amber-200"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-on-surface uppercase tracking-wider text-[11px]">
+                    {check.field_name}
+                  </span>
+                  <FieldCheckBadge status={check.status} />
+                </div>
+                <p className="text-on-surface-variant leading-relaxed">{check.reason}</p>
+                {check.compared_against && (
+                  <p className="text-[10px] text-on-surface-variant mt-1">
+                    Compared against: <strong>{check.compared_against}</strong>
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Verification Result Section — separate labels for extraction vs compliance */}
       <div className="mt-5 pt-4 border-t border-outline-variant/40">
         <h4 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5 text-primary" />
@@ -140,9 +185,10 @@ export default function ExtractedFields({
             {doc?.verificationResult?.message}
           </p>
 
+          {/* Two SEPARATE, EXPLICIT labels — never conflated */}
           <div className="flex items-center gap-4 mt-2.5 pt-2 border-t border-black/5 text-[11px] text-on-surface-variant font-medium">
-            <span>OCR Confidence: <strong>{doc?.ocrConfidence ?? "—"}%</strong></span>
-            <span>Verification Confidence: <strong>{doc?.verificationConfidence ?? "—"}%</strong></span>
+            <span>Extraction Confidence: <strong>{doc?.ocrConfidence ?? "—"}%</strong></span>
+            <span>Compliance Score: <strong>{doc?.overallScore ?? "—"}/100</strong></span>
           </div>
         </div>
       </div>

@@ -53,3 +53,21 @@ def get_latest_check(bidder_id:int,db:Session=Depends(get_db)):
         if not result: result={"document_id":doc.id,"document_type":doc.doc_type,"extraction_confidence":None,"extracted_fields":{},"field_checks":[{"field_name":"document","status":"needs_review","reason":"Pre-migration record, recompute required.","compared_against":None,"required":True,"rule_key":"pre_migration"}],"overall_status":"needs_review","overall_score":50}
         results.append(result)
     return {"bidder_id":bidder_id,"compliance_score":check.compliance_score,"risk_level":check.risk_level,"rule_engine_result":json.loads(check.rule_engine_result),"ml_risk_probability":check.ml_risk_probability,"ai_recommendation":check.ai_recommendation,"document_results":results}
+
+@router.post("/{bidder_id}/decision")
+def officer_decision(bidder_id: int, decision: schemas.OfficerDecision, db: Session = Depends(get_db)):
+    check = db.query(models.ComplianceCheck).filter(
+        models.ComplianceCheck.bidder_id == bidder_id
+    ).order_by(models.ComplianceCheck.created_at.desc()).first()
+    if not check:
+        raise HTTPException(status_code=404, detail="No compliance check found — run one first")
+    check.officer_decision = decision.decision
+    check.officer_remarks = decision.remarks
+    db.add(models.AuditLog(
+        bidder_id=bidder_id,
+        event_type="officer_decision",
+        actor="procurement_officer",
+        details=json.dumps({"decision": decision.decision, "remarks": decision.remarks}),
+    ))
+    db.commit()
+    return {"status": "ok", "decision": decision.decision, "remarks": decision.remarks}

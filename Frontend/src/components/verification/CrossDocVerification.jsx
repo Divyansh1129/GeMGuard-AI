@@ -1,10 +1,37 @@
 import React from "react";
 import { CheckCircle2, AlertTriangle, ArrowRightLeft } from "lucide-react";
 
+/**
+ * CrossDocVerification — renders backend-computed legal-name consistency
+ * checks. No local "Strong Match" calculation — status comes entirely from
+ * the rule_engine's field_checks with rule_key matching legal_name_consistency_*.
+ *
+ * Props:
+ *   documentResults — array of backend DocumentVerificationResult objects
+ *                     (compliance.document_results from the /compliance/run response)
+ */
 export default function CrossDocVerification({
-  entityComparisons = [],
+  documentResults = [],
 }) {
+  // Extract legal-name consistency checks from backend field_checks.
+  const entityComparisons = documentResults.map((docResult) => {
+    const legalNameCheck = (docResult.field_checks || []).find(
+      (fc) => fc.rule_key && fc.rule_key.startsWith("legal_name_consistency_")
+    );
+    const extractedName = docResult.extracted_fields?.legal_name || "Not extracted";
+    return {
+      doc: docResult.document_type,
+      name: extractedName,
+      status: legalNameCheck
+        ? (legalNameCheck.status === "pass" ? "match" : legalNameCheck.status === "fail" ? "mismatch" : "review")
+        : "review",
+      reason: legalNameCheck?.reason || "No legal-name check was performed for this document.",
+    };
+  });
+
   const mismatchCount = entityComparisons.filter((item) => item.status === "mismatch").length;
+  const reviewCount = entityComparisons.filter((item) => item.status === "review").length;
+
   return (
     <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-lg p-5">
       <div className="flex items-center gap-2 mb-1">
@@ -23,20 +50,32 @@ export default function CrossDocVerification({
           <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
             Attribute: Legal Entity Name
           </span>
-          <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border ${mismatchCount ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-green-50 text-green-800 border-green-200"}`}>
-            <AlertTriangle className="w-3 h-3" />
-            {mismatchCount ? `${mismatchCount} Variation${mismatchCount === 1 ? "" : "s"} Detected` : "No variations detected"}
+          <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border ${
+            mismatchCount
+              ? "bg-red-50 text-red-800 border-red-200"
+              : reviewCount
+              ? "bg-amber-50 text-amber-800 border-amber-200"
+              : "bg-green-50 text-green-800 border-green-200"
+          }`}>
+            {mismatchCount
+              ? <><AlertTriangle className="w-3 h-3" /> {`${mismatchCount} Mismatch${mismatchCount === 1 ? "" : "es"} Detected`}</>
+              : reviewCount
+              ? <><AlertTriangle className="w-3 h-3" /> {`${reviewCount} Pending Review`}</>
+              : <><CheckCircle2 className="w-3 h-3" /> All Consistent</>}
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
           {entityComparisons.length ? entityComparisons.map((item, idx) => {
             const isMismatch = item.status === "mismatch";
+            const isReview = item.status === "review";
             return (
               <div
                 key={idx}
                 className={`p-3 rounded border text-xs flex flex-col justify-between min-w-0 ${
                   isMismatch
+                    ? "bg-red-50/70 border-red-300"
+                    : isReview
                     ? "bg-amber-50/70 border-amber-300"
                     : "bg-surface-container-lowest border-outline-variant/40"
                 }`}
@@ -46,6 +85,8 @@ export default function CrossDocVerification({
                     {item.doc}
                   </span>
                   {isMismatch ? (
+                    <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+                  ) : isReview ? (
                     <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
                   ) : (
                     <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
@@ -53,13 +94,13 @@ export default function CrossDocVerification({
                 </div>
                 <div
                   className={`font-medium break-words ${
-                    isMismatch ? "text-amber-900 font-semibold" : "text-on-surface"
+                    isMismatch ? "text-red-900 font-semibold" : isReview ? "text-amber-900" : "text-on-surface"
                   }`}
                 >
                   {item.name}
                 </div>
                 <div className="text-[10px] mt-1 text-on-surface-variant">
-                  {isMismatch ? "⚠ Potential Mismatch" : "✓ Strong Match"}
+                  {item.reason}
                 </div>
               </div>
             );

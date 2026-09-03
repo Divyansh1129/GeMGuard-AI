@@ -44,7 +44,7 @@ def _serialize_document(doc):
     return {"id":doc.id,"doc_type":doc.doc_type,"verification_status":doc.verification_status,"extracted_fields":doc.extracted_fields,"extracted_text":doc.extracted_text,"uploaded_at":doc.uploaded_at,"verification_result":result}
 
 
-@router.post("/upload/{bidder_id}", response_model=schemas.DocumentOut)
+@router.post("/upload/{bidder_id}")
 async def upload_document(
     bidder_id: int,
     doc_type: str = Form(...),
@@ -119,24 +119,25 @@ async def upload_document(
     db.add(log)
     db.commit()
 
-    return doc
+    return _serialize_document(doc)
 
 
-@router.get("/{bidder_id}", response_model=list[schemas.DocumentOut])
+@router.get("/{bidder_id}")
 def list_documents(bidder_id: int, db: Session = Depends(get_db)):
-    return (db.query(models.Document).filter(models.Document.bidder_id == bidder_id)
+    docs = (db.query(models.Document).filter(models.Document.bidder_id == bidder_id)
             .order_by(models.Document.uploaded_at.desc()).all())
+    return [_serialize_document(d) for d in docs]
 
 
-@router.get("/record/{document_id}", response_model=schemas.DocumentOut)
+@router.get("/record/{document_id}")
 def get_document(document_id: int, db: Session = Depends(get_db)):
     doc = db.query(models.Document).filter(models.Document.id == document_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
-    return doc
+    return _serialize_document(doc)
 
 
-@router.patch("/{document_id}/fields", response_model=schemas.DocumentOut)
+@router.patch("/{document_id}/fields")
 def update_extracted_field(document_id: int, update: schemas.ExtractedFieldUpdate, db: Session = Depends(get_db)):
     doc = db.query(models.Document).filter(models.Document.id == document_id).first()
     if not doc:
@@ -148,7 +149,7 @@ def update_extracted_field(document_id: int, update: schemas.ExtractedFieldUpdat
     db.add(models.AuditLog(bidder_id=doc.bidder_id, event_type="extracted_field_updated", actor="procurement_officer", details=json.dumps({"document_id": doc.id, "field": update.field_name})))
     db.commit()
     db.refresh(doc)
-    return doc
+    return _serialize_document(doc)
 
 
 @router.get("/{document_id}/file")

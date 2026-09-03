@@ -1,11 +1,10 @@
 // documentService.js
 // ---------------------
 // Real backend calls now. Same adapter approach as bidderService.js:
-// backend gives you `extracted_fields` as a JSON STRING and a simple
-// `verification_status`; the UI expects a richer object shape (with
-// ocrConfidence, finding, verificationResult, etc. — copied from the old
-// mock data). We map what we genuinely have, and fill the rest with
-// sensible defaults since your current backend doesn't compute those yet.
+// backend gives you `extracted_fields` as a JSON STRING and a reconciled
+// `verification_result` object (with field_checks, overall_status, overall_score,
+// extraction_confidence). We map these to the richer shape the UI expects,
+// keeping OCR/extraction confidence SEPARATE from compliance score.
 
 import api, { API_BASE_URL } from "./api";
 
@@ -22,6 +21,21 @@ function mapDocument(backendDoc) {
   } catch {
     parseError = true;
   }
+
+  // The backend now returns a reconciled verification_result object per document.
+  // It contains: document_id, document_type, extraction_confidence, extracted_fields,
+  // field_checks[], overall_status (pass|fail|needs_review), overall_score (0-100).
+  const vr = backendDoc.verification_result || null;
+
+  // Extraction confidence = how well OCR/LLM could read the document (0-100%)
+  const extractionConfidence = vr?.extraction_confidence != null
+    ? Math.round(vr.extraction_confidence * 100)
+    : (typeof extractedFields.confidence === "number" ? Math.round(extractedFields.confidence * 100) : null);
+
+  // Compliance score = derived ONLY from field_checks pass/fail (0-100)
+  const overallScore = vr?.overall_score ?? null;
+  const overallStatus = vr?.overall_status ?? null;
+  const fieldChecks = vr?.field_checks ?? [];
 
   return {
     id: String(backendDoc.id),
@@ -41,8 +55,17 @@ function mapDocument(backendDoc) {
     finding: parseError
       ? "Automatic field extraction failed — document may need re-upload or manual review."
       : "Document evidence extracted. Official registry verification is not configured.",
-    ocrConfidence: typeof extractedFields.confidence === "number" ? Math.round(extractedFields.confidence * 100) : null,
-    verificationConfidence: null,
+
+    // SEPARATE metrics — never conflate these two
+    ocrConfidence: extractionConfidence,           // OCR/extraction quality (%)
+    extractionConfidence: extractionConfidence,     // alias for clarity
+    overallScore: overallScore,                     // compliance score from field_checks
+    overallStatus: overallStatus,                   // pass | fail | needs_review
+    fieldChecks: fieldChecks,                       // backend field_checks array
+
+    // verificationConfidence is the compliance-derived score, NOT OCR confidence
+    verificationConfidence: overallScore,
+
     extractedFields,
     verificationResult: parseError || backendDoc.verification_status === "invalid"
       ? { valid: false, message: extractedFields.error || "No reliable text could be extracted from this document." }
