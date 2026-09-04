@@ -77,6 +77,8 @@ class ComplianceResult(BaseModel):
     ml_risk_probability: float
     ai_recommendation: str
     document_results: list[DocumentVerificationResultOut] = []
+    govt_checks: Optional[dict] = None
+    blacklist_result: Optional[dict] = None
 
 
 class OfficerDecision(BaseModel):

@@ -26,9 +26,9 @@ import AuditTrail from "../components/verification/AuditTrail";
 import DocumentChecklist from "../components/verification/DocumentChecklist";
 import { showToast } from "../components/common/Toast";
 
-import bidderService from "../services/bidderService";
+import { bidderService } from "../services/bidderService";
 import documentService from "../services/documentService";
-import api from "../services/api";
+import api, { API_BASE_URL } from "../services/api";
 
 // NOTE: normaliseEntityName has been REMOVED. All name-consistency checks
 // are now performed by the backend rule_engine and delivered via
@@ -44,6 +44,7 @@ export default function BidderVerification() {
   const [issuesList, setIssuesList] = useState([]);
   const [auditList, setAuditList] = useState([]);
   const [compliance, setCompliance] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -52,8 +53,6 @@ export default function BidderVerification() {
       let latest = null;
       try { latest = await bidderService.runComplianceCheck(currentBidderId); } catch (error) { console.error(error); }
 
-      // Build issues from rule_engine_result — use applies_to from the rule
-      // itself, never infer from key.split("_")[0].
       const iss = Object.entries(latest?.rule_engine_result || {})
         .filter(([, value]) => !value.pass)
         .map(([key, value]) => ({
@@ -63,7 +62,6 @@ export default function BidderVerification() {
           reviewed: false,
           severity: "warning",
           aiConfidence: Math.round((1 - (latest?.ml_risk_probability || 0)) * 100),
-          // Use the rule's explicit applies_to list instead of string parsing
           affectedDocuments: value.applies_to || [],
           recommendedAction: "Review uploaded evidence",
         }));
@@ -82,6 +80,27 @@ export default function BidderVerification() {
     }
     load();
   }, [currentBidderId]);
+
+  const handleExportDossier = async () => {
+    try {
+      setIsExporting(true);
+      const response = await fetch(`${API_BASE_URL}/compliance/${bidder.id}/report/pdf`);
+      if (!response.ok) throw new Error("Failed to generate PDF compliance report");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `compliance_report_bidder_${bidder.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      showToast("✓ Compliance PDF Dossier downloaded successfully", "success");
+    } catch (err) {
+      showToast("Failed to download PDF report: " + err.message, "error");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   if (!bidder) {
     return (
@@ -156,10 +175,11 @@ export default function BidderVerification() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => showToast("Report downloaded successfully", "success")}
+            onClick={handleExportDossier}
+            disabled={isExporting}
             icon={Download}
           >
-            Export Dossier
+            {isExporting ? "Generating PDF..." : "Export Dossier"}
           </Button>
         </div>
       </div>
@@ -201,6 +221,50 @@ export default function BidderVerification() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Documents & Cross-Check (7 Cols) */}
         <div className="lg:col-span-7 space-y-6">
+          {/* Government Database & Blacklist Verification Card */}
+          {(compliance?.govt_checks || compliance?.blacklist_result) && (
+            <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-lg p-5 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between pb-2 border-b border-outline-variant/40">
+                <div>
+                  <h3 className="text-sm font-bold text-on-surface uppercase tracking-wide flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-primary" /> Government Database & Statutory Verification
+                  </h3>
+                  <p className="text-xs text-on-surface-variant">
+                    Live verification against GST Portal, PAN-GSTIN Cross-Validation, and CVC/GeM Blacklist Database
+                  </p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Blacklist Status */}
+                {compliance.blacklist_result && (
+                  <div className={`p-3 rounded-lg border ${compliance.blacklist_result.status === "blacklisted" ? "bg-red-50 border-red-200 text-red-900" : "bg-emerald-50 border-emerald-200 text-emerald-900"}`}>
+                    <div className="flex items-center justify-between font-bold text-xs">
+                      <span>Blacklist / Debarment Check</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-extrabold ${compliance.blacklist_result.status === "blacklisted" ? "bg-red-600 text-white" : "bg-emerald-600 text-white"}`}>
+                        {compliance.blacklist_result.status === "blacklisted" ? "BLACKLISTED" : "CLEAN"}
+                      </span>
+                    </div>
+                    <p className="text-xs mt-1 leading-snug opacity-90">{compliance.blacklist_result.detail}</p>
+                  </div>
+                )}
+
+                {/* Govt Checks */}
+                {compliance.govt_checks && Object.entries(compliance.govt_checks).map(([key, check]) => (
+                  <div key={key} className={`p-3 rounded-lg border ${check.verified ? "bg-emerald-50/50 border-emerald-200" : "bg-amber-50/50 border-amber-200"}`}>
+                    <div className="flex items-center justify-between font-bold text-xs text-on-surface">
+                      <span className="capitalize">{key.replaceAll("_", " ")}</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-extrabold ${check.verified ? "bg-emerald-600 text-white" : "bg-amber-600 text-white"}`}>
+                        {check.verified ? "VERIFIED" : check.status?.toUpperCase() || "FLAGGED"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-on-surface-variant mt-1 leading-snug">{check.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Document Checklist Table */}
           <DocumentChecklist documents={documents} bidderId={bidder.id} />
 

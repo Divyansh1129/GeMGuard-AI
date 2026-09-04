@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Fraudtech Solutions Pvt. Ltd.",
+    "pan": "AABCF9999Z",
+    "gstin": "27AABCF9999Z1ZQ",
+    "reason": "Submission of forged MSME certificates and fabricated financial documents in multiple GeM tenders",
+    "debarred_by": "Central Vigilance Commission (CVC)",
+    "date": "2024-03-15",
+    "until": "2027-03-15"
+  },
+  {
+    "name": "QuickBid Enterprises Limited",
+    "pan": "AADCQ8888Y",
+    "gstin": "07AADCQ8888Y1ZR",
+    "reason": "Cartel formation and bid rigging in government IT procurement tenders",
+    "debarred_by": "Competition Commission of India (CCI)",
+    "date": "2023-11-01",
+    "until": "2026-11-01"
+  },
+  {
+    "name": "GlobalSupply India Private Limited",
+    "pan": "AABCG7777X",
+    "gstin": "29AABCG7777X1ZS",
+    "reason": "Non-performance and abandonment of government supply contracts worth INR 5 Crore",
+    "debarred_by": "Ministry of Electronics and IT (MeitY)",
+    "date": "2024-06-20",
+    "until": "2027-06-20"
+  },
+  {
+    "name": "StarVenture Technologies LLP",
+    "pan": "AACFS6666W",
+    "gstin": "33AACFS6666W1ZT",
+    "reason": "Fraudulent Startup India certification claims and misrepresentation of turnover",
+    "debarred_by": "Department for Promotion of Industry and Internal Trade (DPIIT)",
+    "date": "2025-01-10",
+    "until": "2028-01-10"
+  },
+  {
+    "name": "ProcureFirst Services Pvt Ltd",
+    "pan": "AABCP5555V",
+    "gstin": "24AABCP5555V1ZU",
+    "reason": "Supply of counterfeit OEM products with forged authorization letters",
+    "debarred_by": "Government e-Marketplace (GeM)",
+    "date": "2024-09-05",
+    "until": "2027-09-05"
+  }
+]
