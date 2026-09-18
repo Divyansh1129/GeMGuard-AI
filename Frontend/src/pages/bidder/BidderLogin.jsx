@@ -18,7 +18,10 @@ export default function BidderLogin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim() || !companyName.trim()) return;
+    if (!companyName.trim() || !email.trim() || !password.trim()) {
+      setError("Please fill in all required fields: Company Name, Email, and Password.");
+      return;
+    }
 
     setLoading(true);
     setError("");
@@ -39,19 +42,66 @@ export default function BidderLogin() {
             tender_id: null,
           })).data.id;
 
-      localStorage.setItem(
-        "gemguard_bidder_auth_v2",
-        JSON.stringify({
-          email,
-          role: "bidder",
-          companyName: companyName.trim(),
-          bidderRealId: Number(bidderRealId),
-          tenderId: null,
-        })
-      );
+      const authPayload = JSON.stringify({
+        email: email.trim(),
+        role: "bidder",
+        companyName: companyName.trim(),
+        bidderRealId: Number(bidderRealId),
+        tenderId: null,
+      });
+
+      localStorage.setItem("gemguard_bidder_auth_v2", authPayload);
+      localStorage.setItem("gem_rakshak_bidder_auth", authPayload);
+
       navigate("/bidder/dashboard");
     } catch (err) {
-      setError(err.message || "Could not connect to backend. Is it running?");
+      setError(err.message || "Could not connect to backend server. Make sure FastAPI server is running on http://localhost:8000.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickLogin = async (targetCompany, pan, gstin, udyam) => {
+    setLoading(true);
+    setError("");
+    try {
+      let bidderRealId = 1;
+      try {
+        const { data: existingBidders } = await api.get("/bidders/");
+        const found = (existingBidders || []).find(
+          (b) => (b.company_name || "").trim().toUpperCase() === targetCompany.toUpperCase()
+        );
+        if (found) {
+          bidderRealId = found.id;
+        } else {
+          const { data: created } = await api.post("/bidders/", {
+            company_name: targetCompany,
+            company_type: "MSME",
+            pan_number: pan,
+            gstin: gstin,
+            udyam_number: udyam,
+            tender_id: "GEM/2026/B/4567890",
+          });
+          bidderRealId = created.id;
+        }
+      } catch {
+        bidderRealId = 1;
+      }
+
+      const authPayload = JSON.stringify({
+        email: `demo@${targetCompany.toLowerCase().split(" ")[0]}.com`,
+        role: "bidder",
+        companyName: targetCompany,
+        bidderRealId: Number(bidderRealId),
+        tenderId: "GEM/2026/B/4567890",
+      });
+
+      localStorage.setItem("gemguard_bidder_auth_v2", authPayload);
+      localStorage.setItem("gem_rakshak_bidder_auth", authPayload);
+
+      navigate("/bidder/dashboard");
+    } catch (err) {
+      setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -156,7 +206,7 @@ export default function BidderLogin() {
             </div>
           </div>
 
-          <div className="mb-8 text-center lg:text-left">
+          <div className="mb-6 text-center lg:text-left">
             <div className="inline-block px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-bold text-[11px] uppercase tracking-wider mb-2">
               Bidder Portal
             </div>
@@ -164,6 +214,34 @@ export default function BidderLogin() {
             <p className="text-xs text-on-surface-variant">
               Submit your compliance documents securely for GeM bid verification.
             </p>
+          </div>
+
+          {/* Quick Demo Login Box for Judge Presentation */}
+          <div className="mb-6 p-3.5 bg-primary-fixed/20 border border-primary/30 rounded-xl space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold uppercase text-primary tracking-wider flex items-center gap-1">
+                ⚡ Quick Judge Demo Login
+              </span>
+              <span className="text-[10px] bg-primary text-white font-bold px-1.5 py-0.5 rounded">1-Click</span>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              <button
+                type="button"
+                onClick={() => handleQuickLogin("TechNova Solutions Pvt. Ltd.", "AABCT1234E", "27AABCT1234E1ZP", "UDYAM-MH-26-0012345")}
+                className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center justify-between"
+              >
+                <span>🟢 Demo Login: TechNova (Compliant)</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickLogin("Fraudtech Solutions Pvt. Ltd.", "AABCF9999Z", "27AABCF9999Z1ZQ", "UDYAM-MH-26-0099999")}
+                className="w-full py-2 px-3 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center justify-between"
+              >
+                <span>🔴 Demo Login: Fraudtech (Blacklisted)</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

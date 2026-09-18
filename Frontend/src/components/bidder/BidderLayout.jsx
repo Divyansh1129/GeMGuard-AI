@@ -6,8 +6,10 @@ import BidderTopbar from "./BidderTopbar";
 export default function BidderLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Check bidder auth
-  const isBidderAuth = localStorage.getItem("gem_rakshak_bidder_auth");
+  // Check bidder auth (both new gemguard key and legacy key)
+  const isBidderAuth =
+    localStorage.getItem("gemguard_bidder_auth_v2") ||
+    localStorage.getItem("gem_rakshak_bidder_auth");
 
   if (!isBidderAuth) {
     return <Navigate to="/bidder/login" replace />;

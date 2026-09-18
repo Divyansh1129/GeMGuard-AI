@@ -26,6 +26,7 @@ export default function BidderSidebar({ isOpen, onClose }) {
   const state = bidderStore.getState();
 
   const handleLogout = () => {
+    localStorage.removeItem("gemguard_bidder_auth_v2");
     localStorage.removeItem("gem_rakshak_bidder_auth");
     navigate("/bidder/login");
   };
