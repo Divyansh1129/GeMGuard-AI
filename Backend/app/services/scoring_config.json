@@ -1,0 +1,32 @@
+{
+  "_comment": "GeMGuard AI — Compliance Scoring Configuration. Weights are normalised internally; only relative values matter.",
+  "categories": {
+    "identity": {
+      "weight": 25,
+      "rules": ["pan_submitted", "pan_format", "pan_document_match", "gst_submitted", "gst_format", "gst_document_match"]
+    },
+    "msme_registration": {
+      "weight": 20,
+      "rules": ["udyam_submitted", "udyam_format", "udyam_document_match"]
+    },
+    "statutory_compliance": {
+      "weight": 20,
+      "rules": ["epfo_submitted", "esic_submitted"]
+    },
+    "procurement_documents": {
+      "weight": 15,
+      "rules": ["non_blacklisting_submitted", "oem_auth_submitted"]
+    },
+    "entity_consistency": {
+      "weight": 15,
+      "rules_prefix": "legal_name_consistency_"
+    },
+    "blacklist_check": {
+      "weight": 5,
+      "rules": ["blacklist_check"]
+    }
+  },
+  "max_score_without_live_api": 90,
+  "live_api_bonus": 10,
+  "live_api_rules": ["govt_pan_gstin_cross", "govt_gstin_state_code", "govt_gstin_checksum", "govt_gstin_live_status", "govt_udyam_format"]
+}

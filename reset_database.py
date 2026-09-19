@@ -12,38 +12,37 @@ import sqlite3
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKEND_DIR = os.path.join(BASE_DIR, "Backend")
-DB_PATH = os.path.join(BACKEND_DIR, "gem_compliance.db")
+DB_PATHS = [
+    os.path.join(BASE_DIR, "gem_compliance.db"),
+    os.path.join(BACKEND_DIR, "gem_compliance.db"),
+]
 UPLOADS_DIR = os.path.join(BACKEND_DIR, "uploads")
 
 
 def clean_project():
     print("[CLEAN] Cleaning GeMGuard AI database and uploads for clean testing...\n")
 
-    # 1. Reset SQLite Database
-    if os.path.exists(DB_PATH):
-        try:
-            # Connect and delete all table rows
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-
-            # Get table names
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-            tables = [row[0] for row in cursor.fetchall() if not row[0].startswith("sqlite_")]
-
-            for table in tables:
-                cursor.execute(f"DELETE FROM {table};")
-                print(f"  OK: Cleared table {table}")
-
-            conn.commit()
-            conn.close()
-            print(f"  OK: Database {DB_PATH} reset successfully.")
-        except Exception as e:
-            print(f"  WARNING: Could not clear DB rows directly ({e}), deleting DB file...")
+    # 1. Reset SQLite Databases
+    for db_p in DB_PATHS:
+        if os.path.exists(db_p):
             try:
-                os.remove(DB_PATH)
-                print(f"  OK: Deleted database file {DB_PATH}")
-            except Exception as del_err:
-                print(f"  ERROR: Could not delete DB file: {del_err}")
+                conn = sqlite3.connect(db_p)
+                cursor = conn.cursor()
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+                tables = [row[0] for row in cursor.fetchall() if not row[0].startswith("sqlite_")]
+                for table in tables:
+                    cursor.execute(f"DELETE FROM {table};")
+                    print(f"  OK: Cleared table {table} in {db_p}")
+                conn.commit()
+                conn.close()
+                print(f"  OK: Database {db_p} reset successfully.")
+            except Exception as e:
+                print(f"  WARNING: Could not clear DB rows ({e}), deleting DB file...")
+                try:
+                    os.remove(db_p)
+                    print(f"  OK: Deleted database file {db_p}")
+                except Exception as del_err:
+                    print(f"  ERROR: Could not delete DB file {db_p}: {del_err}")
 
     # 2. Clear uploads folder
     if os.path.exists(UPLOADS_DIR):

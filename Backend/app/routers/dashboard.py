@@ -6,8 +6,9 @@ data for the "Compliance Dashboard" screen, instead of making the frontend
 stitch together multiple calls itself.
 
 Endpoints:
-  GET /dashboard/summary            -> counts by risk level, total bidders, pending decisions
-  GET /dashboard/{bidder_id}/audit  -> full audit trail for one bidder
+  GET /dashboard/summary                    -> counts by risk level, total bidders, pending decisions
+  GET /dashboard/tenders/{tender_id}/bidders -> tender-level bidder comparison (masked IDs, scores)
+  GET /dashboard/{bidder_id}/audit          -> full audit trail for one bidder
 """
 
 import os
@@ -20,7 +21,7 @@ from app.database import get_db
 from app import models
 from app import schemas
 from app.config import settings
-from app.services import ocr_service, llm_service
+from app.services import ocr_service, llm_service, security_utils
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
@@ -90,6 +91,53 @@ def dashboard_summary(db: Session = Depends(get_db)):
         "total_bidders": total_bidders,
         "risk_breakdown": risk_breakdown,
         "pending_officer_decisions": pending_decisions,
+    }
+
+
+@router.get("/tenders/{tender_id}/bidders")
+def compare_tender_bidders(tender_id: str, db: Session = Depends(get_db)):
+    """
+    Tender-level bidder comparison endpoint (TASK 6).
+    Returns all bidders participating in a tender with their masked IDs,
+    compliance scores, risk levels, and officer decisions for side-by-side review.
+    """
+    tender = db.get(models.Tender, tender_id)
+    if not tender:
+        raise HTTPException(status_code=404, detail="Tender not found")
+
+    bidders = db.query(models.Bidder).filter(models.Bidder.tender_id == tender_id).all()
+    comparison = []
+
+    for b in bidders:
+        check = (
+            db.query(models.ComplianceCheck)
+            .filter(models.ComplianceCheck.bidder_id == b.id)
+            .order_by(models.ComplianceCheck.created_at.desc())
+            .first()
+        )
+        doc_count = db.query(models.Document).filter(models.Document.bidder_id == b.id).count()
+
+        comparison.append({
+            "bidder_id": b.id,
+            "company_name": b.company_name,
+            "company_type": b.company_type,
+            "pan_masked": security_utils.mask_pan(b.pan_number or ""),
+            "gstin_masked": security_utils.mask_gstin(b.gstin or ""),
+            "udyam_number": b.udyam_number or "",
+            "compliance_score": check.compliance_score if check else None,
+            "risk_level": check.risk_level if check else "Pending Run",
+            "ml_risk_probability": check.ml_risk_probability if check else None,
+            "officer_decision": check.officer_decision if check else "pending",
+            "documents_uploaded_count": doc_count,
+            "created_at": b.created_at.isoformat() if b.created_at else None,
+        })
+
+    return {
+        "tender_id": tender_id,
+        "tender_name": tender.name,
+        "department": tender.department,
+        "total_bidders": len(bidders),
+        "bidders": comparison,
     }
 
 

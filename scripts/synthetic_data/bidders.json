@@ -1,0 +1,745 @@
+[
+  {
+    "bidder_id": 1,
+    "scenario_id": "S01",
+    "scenario_name": "Fully Compliant",
+    "company_name": "TechNova Solutions Pvt. Ltd.",
+    "company_type": "MSME",
+    "pan_number": "AABCT1234A",
+    "gstin": "27AABCT1234E1ZP",
+    "udyam_number": "UDYAM-MH-26-0012345",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "esic",
+      "non_blacklisting",
+      "oem_auth"
+    ],
+    "anomalies": [],
+    "description": "All 7 statutory docs present; PAN/GSTIN match; Udyam valid; no blacklist."
+  },
+  {
+    "bidder_id": 2,
+    "scenario_id": "S01",
+    "scenario_name": "Fully Compliant",
+    "company_name": "TechNova Solutions Pvt. Ltd. (Branch Office)",
+    "company_type": "MSME",
+    "pan_number": "AABCT1234B",
+    "gstin": "27AABCT1234E1ZP",
+    "udyam_number": "UDYAM-MH-26-0012345",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "esic",
+      "non_blacklisting",
+      "oem_auth"
+    ],
+    "anomalies": [],
+    "description": "All 7 statutory docs present; PAN/GSTIN match; Udyam valid; no blacklist."
+  },
+  {
+    "bidder_id": 3,
+    "scenario_id": "S01",
+    "scenario_name": "Fully Compliant",
+    "company_name": "TechNova Solutions Pvt. Ltd. II",
+    "company_type": "MSME",
+    "pan_number": "AABCT1234C",
+    "gstin": "27AABCT1234E1ZP",
+    "udyam_number": "UDYAM-MH-26-0012345",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "esic",
+      "non_blacklisting",
+      "oem_auth"
+    ],
+    "anomalies": [],
+    "description": "All 7 statutory docs present; PAN/GSTIN match; Udyam valid; no blacklist."
+  },
+  {
+    "bidder_id": 4,
+    "scenario_id": "S01",
+    "scenario_name": "Fully Compliant",
+    "company_name": "TechNova Solutions Pvt. Ltd. International",
+    "company_type": "MSME",
+    "pan_number": "AABCT1234D",
+    "gstin": "27AABCT1234E1ZP",
+    "udyam_number": "UDYAM-MH-26-0012345",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "esic",
+      "non_blacklisting",
+      "oem_auth"
+    ],
+    "anomalies": [],
+    "description": "All 7 statutory docs present; PAN/GSTIN match; Udyam valid; no blacklist."
+  },
+  {
+    "bidder_id": 5,
+    "scenario_id": "S02",
+    "scenario_name": "Blacklisted Entity",
+    "company_name": "Fraudtech Solutions Pvt. Ltd.",
+    "company_type": "MSME",
+    "pan_number": "BBBFR5678A",
+    "gstin": "27BBBFR5678X1ZP",
+    "udyam_number": "UDYAM-MH-12-0067890",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "blacklisted"
+    ],
+    "description": "Exact PAN match in CVC/GeM blacklist database."
+  },
+  {
+    "bidder_id": 6,
+    "scenario_id": "S02",
+    "scenario_name": "Blacklisted Entity",
+    "company_name": "Fraudtech Solutions Pvt. Ltd. (Branch Office)",
+    "company_type": "MSME",
+    "pan_number": "BBBFR5678B",
+    "gstin": "27BBBFR5678X1ZP",
+    "udyam_number": "UDYAM-MH-12-0067890",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "blacklisted"
+    ],
+    "description": "Exact PAN match in CVC/GeM blacklist database."
+  },
+  {
+    "bidder_id": 7,
+    "scenario_id": "S02",
+    "scenario_name": "Blacklisted Entity",
+    "company_name": "Fraudtech Solutions Pvt. Ltd. II",
+    "company_type": "MSME",
+    "pan_number": "BBBFR5678C",
+    "gstin": "27BBBFR5678X1ZP",
+    "udyam_number": "UDYAM-MH-12-0067890",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "blacklisted"
+    ],
+    "description": "Exact PAN match in CVC/GeM blacklist database."
+  },
+  {
+    "bidder_id": 8,
+    "scenario_id": "S02",
+    "scenario_name": "Blacklisted Entity",
+    "company_name": "Fraudtech Solutions Pvt. Ltd. International",
+    "company_type": "MSME",
+    "pan_number": "BBBFR5678D",
+    "gstin": "27BBBFR5678X1ZP",
+    "udyam_number": "UDYAM-MH-12-0067890",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "blacklisted"
+    ],
+    "description": "Exact PAN match in CVC/GeM blacklist database."
+  },
+  {
+    "bidder_id": 9,
+    "scenario_id": "S03",
+    "scenario_name": "GST Inactive / Cancelled",
+    "company_name": "InactiveGST Traders Ltd.",
+    "company_type": "MSME",
+    "pan_number": "CCCGT9001A",
+    "gstin": "29CCCGT9001K1ZA",
+    "udyam_number": "UDYAM-KA-29-0098765",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "gst_inactive"
+    ],
+    "description": "GSTIN status is 'Cancelled' on portal; all other docs pass."
+  },
+  {
+    "bidder_id": 10,
+    "scenario_id": "S03",
+    "scenario_name": "GST Inactive / Cancelled",
+    "company_name": "InactiveGST Traders Ltd. (Branch Office)",
+    "company_type": "MSME",
+    "pan_number": "CCCGT9001B",
+    "gstin": "29CCCGT9001K1ZA",
+    "udyam_number": "UDYAM-KA-29-0098765",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "gst_inactive"
+    ],
+    "description": "GSTIN status is 'Cancelled' on portal; all other docs pass."
+  },
+  {
+    "bidder_id": 11,
+    "scenario_id": "S03",
+    "scenario_name": "GST Inactive / Cancelled",
+    "company_name": "InactiveGST Traders Ltd. II",
+    "company_type": "MSME",
+    "pan_number": "CCCGT9001C",
+    "gstin": "29CCCGT9001K1ZA",
+    "udyam_number": "UDYAM-KA-29-0098765",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "gst_inactive"
+    ],
+    "description": "GSTIN status is 'Cancelled' on portal; all other docs pass."
+  },
+  {
+    "bidder_id": 12,
+    "scenario_id": "S03",
+    "scenario_name": "GST Inactive / Cancelled",
+    "company_name": "InactiveGST Traders Ltd. International",
+    "company_type": "MSME",
+    "pan_number": "CCCGT9001D",
+    "gstin": "29CCCGT9001K1ZA",
+    "udyam_number": "UDYAM-KA-29-0098765",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "gst_inactive"
+    ],
+    "description": "GSTIN status is 'Cancelled' on portal; all other docs pass."
+  },
+  {
+    "bidder_id": 13,
+    "scenario_id": "S04",
+    "scenario_name": "PAN-GSTIN Mismatch",
+    "company_name": "MismatchCorp Pvt. Ltd.",
+    "company_type": "MSME",
+    "pan_number": "DDDMC4567A",
+    "gstin": "06XXXXX1234X1ZQ",
+    "udyam_number": "UDYAM-HR-06-0011111",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "pan_gstin_mismatch"
+    ],
+    "description": "PAN and GSTIN belong to different entities (embedded PAN mismatch)."
+  },
+  {
+    "bidder_id": 14,
+    "scenario_id": "S04",
+    "scenario_name": "PAN-GSTIN Mismatch",
+    "company_name": "MismatchCorp Pvt. Ltd. (Branch Office)",
+    "company_type": "MSME",
+    "pan_number": "DDDMC4567B",
+    "gstin": "06XXXXX1234X1ZQ",
+    "udyam_number": "UDYAM-HR-06-0011111",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "pan_gstin_mismatch"
+    ],
+    "description": "PAN and GSTIN belong to different entities (embedded PAN mismatch)."
+  },
+  {
+    "bidder_id": 15,
+    "scenario_id": "S04",
+    "scenario_name": "PAN-GSTIN Mismatch",
+    "company_name": "MismatchCorp Pvt. Ltd. II",
+    "company_type": "MSME",
+    "pan_number": "DDDMC4567C",
+    "gstin": "06XXXXX1234X1ZQ",
+    "udyam_number": "UDYAM-HR-06-0011111",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "pan_gstin_mismatch"
+    ],
+    "description": "PAN and GSTIN belong to different entities (embedded PAN mismatch)."
+  },
+  {
+    "bidder_id": 16,
+    "scenario_id": "S05",
+    "scenario_name": "Missing EPFO",
+    "company_name": "NoEPFO Enterprises Ltd.",
+    "company_type": "MSME",
+    "pan_number": "EEENE2345A",
+    "gstin": "19EEENE2345F1ZB",
+    "udyam_number": "UDYAM-WB-19-0055678",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "esic",
+      "non_blacklisting",
+      "oem_auth"
+    ],
+    "anomalies": [
+      "missing_epfo"
+    ],
+    "description": "EPFO document not uploaded; all other docs compliant."
+  },
+  {
+    "bidder_id": 17,
+    "scenario_id": "S05",
+    "scenario_name": "Missing EPFO",
+    "company_name": "NoEPFO Enterprises Ltd. (Branch Office)",
+    "company_type": "MSME",
+    "pan_number": "EEENE2345B",
+    "gstin": "19EEENE2345F1ZB",
+    "udyam_number": "UDYAM-WB-19-0055678",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "esic",
+      "non_blacklisting",
+      "oem_auth"
+    ],
+    "anomalies": [
+      "missing_epfo"
+    ],
+    "description": "EPFO document not uploaded; all other docs compliant."
+  },
+  {
+    "bidder_id": 18,
+    "scenario_id": "S05",
+    "scenario_name": "Missing EPFO",
+    "company_name": "NoEPFO Enterprises Ltd. II",
+    "company_type": "MSME",
+    "pan_number": "EEENE2345C",
+    "gstin": "19EEENE2345F1ZB",
+    "udyam_number": "UDYAM-WB-19-0055678",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "esic",
+      "non_blacklisting",
+      "oem_auth"
+    ],
+    "anomalies": [
+      "missing_epfo"
+    ],
+    "description": "EPFO document not uploaded; all other docs compliant."
+  },
+  {
+    "bidder_id": 19,
+    "scenario_id": "S06",
+    "scenario_name": "Missing ESIC",
+    "company_name": "NoESIC Systems Ltd.",
+    "company_type": "MSME",
+    "pan_number": "FFFNS6789A",
+    "gstin": "07FFFNS6789G1ZC",
+    "udyam_number": "UDYAM-DL-07-0099999",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "missing_esic"
+    ],
+    "description": "ESIC document not uploaded; establishment likely covered."
+  },
+  {
+    "bidder_id": 20,
+    "scenario_id": "S06",
+    "scenario_name": "Missing ESIC",
+    "company_name": "NoESIC Systems Ltd. (Branch Office)",
+    "company_type": "MSME",
+    "pan_number": "FFFNS6789B",
+    "gstin": "07FFFNS6789G1ZC",
+    "udyam_number": "UDYAM-DL-07-0099999",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "missing_esic"
+    ],
+    "description": "ESIC document not uploaded; establishment likely covered."
+  },
+  {
+    "bidder_id": 21,
+    "scenario_id": "S06",
+    "scenario_name": "Missing ESIC",
+    "company_name": "NoESIC Systems Ltd. II",
+    "company_type": "MSME",
+    "pan_number": "FFFNS6789C",
+    "gstin": "07FFFNS6789G1ZC",
+    "udyam_number": "UDYAM-DL-07-0099999",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "missing_esic"
+    ],
+    "description": "ESIC document not uploaded; establishment likely covered."
+  },
+  {
+    "bidder_id": 22,
+    "scenario_id": "S07",
+    "scenario_name": "Invalid Udyam Format",
+    "company_name": "BadUdyam Pvt. Ltd.",
+    "company_type": "MSME",
+    "pan_number": "GGGBU3456A",
+    "gstin": "33GGGBU3456H1ZD",
+    "udyam_number": "UDYAM-XX-99-9999999",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "invalid_udyam"
+    ],
+    "description": "Udyam number uses wrong format (missing state code)."
+  },
+  {
+    "bidder_id": 23,
+    "scenario_id": "S07",
+    "scenario_name": "Invalid Udyam Format",
+    "company_name": "BadUdyam Pvt. Ltd. (Branch Office)",
+    "company_type": "MSME",
+    "pan_number": "GGGBU3456B",
+    "gstin": "33GGGBU3456H1ZD",
+    "udyam_number": "UDYAM-XX-99-9999999",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "invalid_udyam"
+    ],
+    "description": "Udyam number uses wrong format (missing state code)."
+  },
+  {
+    "bidder_id": 24,
+    "scenario_id": "S07",
+    "scenario_name": "Invalid Udyam Format",
+    "company_name": "BadUdyam Pvt. Ltd. II",
+    "company_type": "MSME",
+    "pan_number": "GGGBU3456C",
+    "gstin": "33GGGBU3456H1ZD",
+    "udyam_number": "UDYAM-XX-99-9999999",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "invalid_udyam"
+    ],
+    "description": "Udyam number uses wrong format (missing state code)."
+  },
+  {
+    "bidder_id": 25,
+    "scenario_id": "S08",
+    "scenario_name": "Legal Name Mismatch",
+    "company_name": "AlphaGroup Pvt. Ltd.",
+    "company_type": "MSME",
+    "pan_number": "HHHAG7890A",
+    "gstin": "24HHHAG7890J1ZE",
+    "udyam_number": "UDYAM-GJ-24-0022222",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "name_mismatch"
+    ],
+    "description": "Company name on PAN card differs significantly from GST certificate."
+  },
+  {
+    "bidder_id": 26,
+    "scenario_id": "S08",
+    "scenario_name": "Legal Name Mismatch",
+    "company_name": "AlphaGroup Pvt. Ltd. (Branch Office)",
+    "company_type": "MSME",
+    "pan_number": "HHHAG7890B",
+    "gstin": "24HHHAG7890J1ZE",
+    "udyam_number": "UDYAM-GJ-24-0022222",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "name_mismatch"
+    ],
+    "description": "Company name on PAN card differs significantly from GST certificate."
+  },
+  {
+    "bidder_id": 27,
+    "scenario_id": "S08",
+    "scenario_name": "Legal Name Mismatch",
+    "company_name": "AlphaGroup Pvt. Ltd. II",
+    "company_type": "MSME",
+    "pan_number": "HHHAG7890C",
+    "gstin": "24HHHAG7890J1ZE",
+    "udyam_number": "UDYAM-GJ-24-0022222",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "name_mismatch"
+    ],
+    "description": "Company name on PAN card differs significantly from GST certificate."
+  },
+  {
+    "bidder_id": 28,
+    "scenario_id": "S09",
+    "scenario_name": "Many Documents Missing",
+    "company_name": "Incomplete Docs Corp.",
+    "company_type": "Large Enterprise",
+    "pan_number": "IIIDC1234A",
+    "gstin": "09IIIDC1234K1ZF",
+    "udyam_number": "",
+    "docs_uploaded": [
+      "pan",
+      "gst"
+    ],
+    "anomalies": [
+      "docs_missing"
+    ],
+    "description": "Only PAN and GST uploaded; 5 required docs missing."
+  },
+  {
+    "bidder_id": 29,
+    "scenario_id": "S09",
+    "scenario_name": "Many Documents Missing",
+    "company_name": "Incomplete Docs Corp. (Branch Office)",
+    "company_type": "Large Enterprise",
+    "pan_number": "IIIDC1234B",
+    "gstin": "09IIIDC1234K1ZF",
+    "udyam_number": "",
+    "docs_uploaded": [
+      "pan",
+      "gst"
+    ],
+    "anomalies": [
+      "docs_missing"
+    ],
+    "description": "Only PAN and GST uploaded; 5 required docs missing."
+  },
+  {
+    "bidder_id": 30,
+    "scenario_id": "S09",
+    "scenario_name": "Many Documents Missing",
+    "company_name": "Incomplete Docs Corp. II",
+    "company_type": "Large Enterprise",
+    "pan_number": "IIIDC1234C",
+    "gstin": "09IIIDC1234K1ZF",
+    "udyam_number": "",
+    "docs_uploaded": [
+      "pan",
+      "gst"
+    ],
+    "anomalies": [
+      "docs_missing"
+    ],
+    "description": "Only PAN and GST uploaded; 5 required docs missing."
+  },
+  {
+    "bidder_id": 31,
+    "scenario_id": "S10",
+    "scenario_name": "Startup India Claimed but Unverified",
+    "company_name": "StartupClaim Ventures Pvt. Ltd.",
+    "company_type": "MSME",
+    "pan_number": "JJJSC5678A",
+    "gstin": "27JJJSC5678L1ZG",
+    "udyam_number": "UDYAM-MH-27-0033333",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "startup_india",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "startup_unverified"
+    ],
+    "description": "Bidder claims Startup India status but certificate is OCR-unreadable."
+  },
+  {
+    "bidder_id": 32,
+    "scenario_id": "S10",
+    "scenario_name": "Startup India Claimed but Unverified",
+    "company_name": "StartupClaim Ventures Pvt. Ltd. (Branch Office)",
+    "company_type": "MSME",
+    "pan_number": "JJJSC5678B",
+    "gstin": "27JJJSC5678L1ZG",
+    "udyam_number": "UDYAM-MH-27-0033333",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "startup_india",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "startup_unverified"
+    ],
+    "description": "Bidder claims Startup India status but certificate is OCR-unreadable."
+  },
+  {
+    "bidder_id": 33,
+    "scenario_id": "S10",
+    "scenario_name": "Startup India Claimed but Unverified",
+    "company_name": "StartupClaim Ventures Pvt. Ltd. II",
+    "company_type": "MSME",
+    "pan_number": "JJJSC5678C",
+    "gstin": "27JJJSC5678L1ZG",
+    "udyam_number": "UDYAM-MH-27-0033333",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "startup_india",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "startup_unverified"
+    ],
+    "description": "Bidder claims Startup India status but certificate is OCR-unreadable."
+  },
+  {
+    "bidder_id": 34,
+    "scenario_id": "S11",
+    "scenario_name": "OEM Authorization Missing",
+    "company_name": "NoOEM Tech Solutions Pvt. Ltd.",
+    "company_type": "MSME",
+    "pan_number": "KKKNT9012A",
+    "gstin": "29KKKNT9012M1ZH",
+    "udyam_number": "UDYAM-KA-29-0044444",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "esic",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "missing_oem"
+    ],
+    "description": "Bidder quotes OEM products but OEM authorization letter not submitted."
+  },
+  {
+    "bidder_id": 35,
+    "scenario_id": "S11",
+    "scenario_name": "OEM Authorization Missing",
+    "company_name": "NoOEM Tech Solutions Pvt. Ltd. (Branch Office)",
+    "company_type": "MSME",
+    "pan_number": "KKKNT9012B",
+    "gstin": "29KKKNT9012M1ZH",
+    "udyam_number": "UDYAM-KA-29-0044444",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "esic",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "missing_oem"
+    ],
+    "description": "Bidder quotes OEM products but OEM authorization letter not submitted."
+  },
+  {
+    "bidder_id": 36,
+    "scenario_id": "S11",
+    "scenario_name": "OEM Authorization Missing",
+    "company_name": "NoOEM Tech Solutions Pvt. Ltd. II",
+    "company_type": "MSME",
+    "pan_number": "KKKNT9012C",
+    "gstin": "29KKKNT9012M1ZH",
+    "udyam_number": "UDYAM-KA-29-0044444",
+    "docs_uploaded": [
+      "pan",
+      "gst",
+      "udyam",
+      "epfo",
+      "esic",
+      "non_blacklisting"
+    ],
+    "anomalies": [
+      "missing_oem"
+    ],
+    "description": "Bidder quotes OEM products but OEM authorization letter not submitted."
+  }
+]

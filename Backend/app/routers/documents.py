@@ -25,7 +25,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models, schemas
-from app.services import ocr_service, llm_service
+from app.services import ocr_service, llm_service, security_utils, audit_service
 from app.config import settings
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
@@ -58,12 +58,15 @@ async def upload_document(
     allowed_types = {"pan", "gst", "udyam", "epfo", "esic", "non_blacklisting", "startup_india", "oem_auth"}
     if doc_type not in allowed_types:
         raise HTTPException(status_code=422, detail="Unsupported document type")
-    extension = os.path.splitext(file.filename or "")[1].lower()
-    if extension not in {".pdf", ".png", ".jpg", ".jpeg"}:
-        raise HTTPException(status_code=415, detail="Only PDF, PNG, JPG, and JPEG files are supported")
     content = await file.read()
     if not content or len(content) > settings.MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="File must be between 1 byte and 10 MB")
+
+    try:
+        extension = security_utils.validate_file_content(content, file.filename or "doc.pdf")
+    except ValueError as ve:
+        raise HTTPException(status_code=415, detail=str(ve))
+
     safe_name = re.sub(r"[^A-Za-z0-9._-]", "_", os.path.basename(file.filename or "document"))
     file_path = os.path.join(settings.UPLOAD_DIR, f"{bidder_id}_{doc_type}_{safe_name}")
     with open(file_path, "wb") as f:

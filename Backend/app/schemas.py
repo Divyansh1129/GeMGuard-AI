@@ -1,12 +1,4 @@
-"""
-schemas.py
-----------
-Pydantic models = the "shape" of data going IN and OUT of your API.
-Different from models.py (which is the DB table shape).
-FastAPI uses these to validate incoming requests and auto-generate the
-interactive API docs at /docs.
-"""
-
+"""schemas.py - Pydantic schemas for GeMGuard AI API."""
 from pydantic import BaseModel
 from typing import Optional, Any
 from datetime import datetime
@@ -26,7 +18,7 @@ class BidderOut(BidderCreate):
     created_at: datetime
 
     class Config:
-        from_attributes = True  # lets Pydantic read directly from SQLAlchemy objects
+        from_attributes = True
 
 
 class BidderUpdate(BaseModel):
@@ -45,6 +37,7 @@ class FieldCheckOut(BaseModel):
     required: bool = True
     rule_key: str
 
+
 class DocumentVerificationResultOut(BaseModel):
     document_id: int
     document_type: str
@@ -53,6 +46,7 @@ class DocumentVerificationResultOut(BaseModel):
     field_checks: list[FieldCheckOut] = []
     overall_status: str
     overall_score: int
+
 
 class DocumentOut(BaseModel):
     id: int
@@ -69,6 +63,33 @@ class DocumentOut(BaseModel):
         from_attributes = True
 
 
+class RecommendationSchema(BaseModel):
+    """Structured AI recommendation output validated by Pydantic."""
+    summary: str
+    risk_flags: list[str] = []
+    suggested_action: str  # qualify | disqualify | request_more_info
+    confidence: float = 0.0  # 0.0 to 1.0
+    generated_by: str = "llm"  # llm | rule_fallback
+
+
+class ScoreBreakdown(BaseModel):
+    """Weighted score breakdown by compliance category."""
+    raw_score: float
+    total: float
+    categories: dict = {}
+    api_cap_applied: bool = False
+    api_cap_limit: Optional[float] = None
+
+
+class AuditVerifyResult(BaseModel):
+    """Result of verify_audit_chain()."""
+    valid: bool
+    total_entries: int
+    tampered_entries: list[int] = []
+    backfilled_entries: list[int] = []
+    detail: str
+
+
 class ComplianceResult(BaseModel):
     bidder_id: int
     compliance_score: float
@@ -76,13 +97,15 @@ class ComplianceResult(BaseModel):
     rule_engine_result: dict
     ml_risk_probability: float
     ai_recommendation: str
+    ai_recommendation_structured: Optional[RecommendationSchema] = None
+    score_breakdown: Optional[ScoreBreakdown] = None
     document_results: list[DocumentVerificationResultOut] = []
     govt_checks: Optional[dict] = None
     blacklist_result: Optional[dict] = None
 
 
 class OfficerDecision(BaseModel):
-    decision: str          # "qualified" or "disqualified"
+    decision: str  # qualified or disqualified
     remarks: Optional[str] = None
 
 

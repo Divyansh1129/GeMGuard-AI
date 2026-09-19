@@ -1,578 +1,147 @@
-Absolutely — here’s a polished, GitHub-ready README for **GemGuard AI**, based on your Gem Rakshak project architecture and compliance workflow.
+# GeMGuard AI — Smart India Hackathon (SIH) 2026
 
-# 🛡️ GemGuard AI
+[![Python 3.13](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green.svg)](https://fastapi.tiangolo.com/)
+[![React 19](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
+[![Tests](https://img.shields.io/badge/Tests-40%20Passed-success.svg)]()
 
-### AI-Powered Tender Bidder Compliance & Risk Assessment Platform
-
-**GemGuard AI** is an intelligent compliance and risk-assessment platform designed to help government procurement officers evaluate bidders participating in **GeM (Government e-Marketplace)** tenders.
-
-It automates bidder verification, statutory compliance checks, document validation, risk prediction, and AI-powered recommendations — while keeping the final decision under the control of the authorized officer.
-
----
-
-## 🚨 Problem
-
-Government procurement involves evaluating large numbers of bidders against multiple eligibility and statutory requirements.
-
-Traditional verification processes can be:
-
-* ⏳ Time-consuming
-* 📄 Highly document-intensive
-* 🔍 Difficult to audit
-* ⚠️ Vulnerable to human error
-* 🔄 Dependent on checking multiple government portals
-* 📊 Difficult to use for consistent risk assessment
-
-Officers need to verify information related to:
-
-* GST
-* PAN / ITR
-* Udyam registration
-* EPFO
-* ESIC
-* Blacklisting
-* Startup / MSME status
-* Make-in-India requirements
-* Financial and statutory compliance
-
-**GemGuard AI brings these checks together into one intelligent workflow.**
+> **Problem Statement:** Automated Verification of Bidder Compliance in GeM Procurement  
+> **Tagline:** *Rakshak = Protector — AI protects procurement integrity; human officer retains authority.*
 
 ---
 
-# 💡 Our Solution
+## ⚠️ Important Disclaimer & Integration Boundary
 
-GemGuard AI creates a centralized bidder compliance pipeline:
+> [!IMPORTANT]
+> **No official government API integration is claimed or implied.**
+> All government registry verification adapters (EPFO, ESIC, MCA21, NSIC, Startup India, DigiLocker, BIS) run in **mock mode** using deterministic sample responses clearly labelled `[SOURCE: mock_*]`. The live GST check queries an **unofficial public endpoint** (`sheet.gstincheck.co.in`), NOT the authenticated GSTN API.
+> 
+> GeMGuard AI is designed as a **Decision Support System**. Final legal authority for bidder qualification or disqualification rests strictly with the designated Procurement Officer as per GeM General Terms & Conditions.
 
-```text
-                    ┌─────────────────────┐
-                    │     Bidder Data     │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-              ┌────────────────────────────┐
-              │  Government Portal Checks  │
-              │ GSTN • PAN • Udyam • EPFO  │
-              │ ESIC • Blacklist           │
-              └─────────────┬──────────────┘
-                            │
-                            ▼
-              ┌────────────────────────────┐
-              │   Compliance Rule Engine   │
-              │   Explainable Rule Checks  │
-              └─────────────┬──────────────┘
-                            │
-                            ▼
-              ┌────────────────────────────┐
-              │       ML Risk Model        │
-              │       Random Forest        │
-              └─────────────┬──────────────┘
-                            │
-                            ▼
-              ┌────────────────────────────┐
-              │     AI Recommendation      │
-              │       Groq / Llama         │
-              └─────────────┬──────────────┘
-                            │
-                            ▼
-              ┌────────────────────────────┐
-              │     Officer Dashboard      │
-              │ Qualify / Disqualify       │
-              └────────────────────────────┘
+---
+
+## 🌟 Core Features
+
+- **Document Verification Pipeline:** Tesseract OCR + Groq Llama 3.3 70B field extraction for 8 statutory document types (PAN, GSTIN, Udyam, EPFO, ESIC, Non-Blacklisting, OEM Auth, Startup India).
+- **Portal Adapter Layer (11 Adapters):** Abstract adapter pattern with mock/live mode toggle (`ADAPTER_MODE`), 5-minute TTL caching, and exponential back-off retries.
+- **28-Feature Random Forest Risk Model:** ML classifier (`risk_model.pkl`) predicting high-risk probability with graceful rule-engine fallback.
+- **Weighted Compliance Scoring:** Config-driven (`scoring_config.json`) weighted scoring with a **90/100 cap** when direct government registry APIs are unauthenticated.
+- **CVC / GeM Debarment Lookup:** Fuzzy legal name normalization and exact PAN/GSTIN matching against debarment databases.
+- **Tamper-Evident Audit Trail:** Cryptographic SHA-256 hash chain linking every audit log entry to the previous entry, with automated chain verification (`GET /compliance/{id}/audit/verify`).
+- **Structured AI Recommendation:** Schema-validated (`RecommendationSchema`) AI assessment for procurement officers, with diff-from-AI tracking.
+- **Tender-Level Bidder Comparison:** Side-by-side comparison view matrix across bidders participating in the same tender (`GET /dashboard/tenders/{id}/bidders`).
+- **PDF Compliance Dossier Export:** Dynamic, ASCII-sanitized report generation via `fpdf2`.
+- **Security & Privacy:** Automatic PAN/GSTIN masking (`ABCDE****E`), magic-byte file header validation, and SQLite-to-PostgreSQL ORM swap path.
+
+---
+
+## 🏗️ Architecture & Data Flow
+
+```
+   [ Uploaded Document ] ──► [ Tesseract OCR / PyMuPDF ]
+                                      │
+                                      ▼
+                           [ Groq Llama 3.3 70B ]
+                        (Structured Field Extraction)
+                                      │
+                                      ▼
+                        ┌─────────────┴─────────────┐
+                        │  Rule Engine & Adapters   │
+                        └─────────────┬─────────────┘
+                                      │
+           ┌──────────────────────────┼──────────────────────────┐
+           ▼                          ▼                          ▼
+ [ 11 Portal Adapters ]   [ CVC Blacklist Lookup ]   [ 28-Feature RF Model ]
+(GST, PAN, Udyam, EPFO...)    (Exact & Fuzzy Match)     (High Risk Predictor)
+           │                          │                          │
+           └──────────────────────────┼──────────────────────────┘
+                                      │
+                                      ▼
+                        [ Weighted Score Engine ]
+                    (90/100 Cap if API Unconfigured)
+                                      │
+                                      ▼
+                     [ Structured AI Recommendation ]
+                     (Decision Support for Officer)
+                                      │
+                                      ▼
+                     [ Tamper-Evident Audit Chain ]
+                        (SHA-256 Event Hashing)
 ```
 
 ---
 
-# ✨ Key Features
+## 🛠️ Quick Start (One Command)
 
-## 1. 🔎 Automated Bidder Verification
+### Prerequisites
+- Python 3.11+
+- Node.js 18+
 
-GemGuard AI consolidates verification across multiple statutory sources.
-
-The platform evaluates:
-
-* Udyam registration
-* GST status and returns
-* PAN / ITR information
-* EPFO compliance
-* ESIC compliance
-* Blacklist status
-* Startup / MSME eligibility
-* Other tender-specific eligibility conditions
-
----
-
-## 2. ⚖️ Explainable Compliance Engine
-
-Instead of producing only a black-box prediction, GemGuard AI performs explicit statutory and tender-rule checks.
-
-Each requirement can be evaluated as:
-
-```text
-✅ PASS
-❌ FAIL
-⚠️ WARNING
+### Setup & Run
+```cmd
+setup.bat
 ```
+*(Installs dependencies, runs 40 automated unit tests, and seeds 3 scenario bidders)*
 
-This makes the system easier for officers to understand and audit.
-
----
-
-## 3. 🤖 AI Risk Assessment
-
-A **Random Forest machine-learning model** evaluates bidder-related compliance features and generates a risk assessment.
-
-Example features include:
-
-* Portal validity
-* Registration status
-* GST return compliance
-* PAN / ITR default indicators
-* EPFO compliance
-* ESIC compliance
-* Make-in-India content threshold
-* Startup / MSME status
-* Previous compliance indicators
-
-The ML layer helps identify potentially high-risk bidders requiring closer scrutiny.
-
----
-
-## 4. 🧠 LLM-Powered Recommendation
-
-GemGuard AI uses **Groq / Llama** to convert structured compliance results into an understandable recommendation.
-
-Instead of simply displaying raw data, the system can explain:
-
-> Why the bidder passed or failed specific requirements.
-
-The AI recommendation acts as a **decision-support layer**, not as a replacement for the authorized officer.
-
----
-
-## 5. 📊 Officer Dashboard
-
-The dashboard provides a centralized view of bidder compliance.
-
-Officers can review:
-
-* Bidder information
-* Verification results
-* Compliance rules
-* Risk score
-* AI recommendation
-* Audit history
-* Final decision
-
----
-
-## 6. 🧾 Audit Trail
-
-Every compliance evaluation can be recorded for traceability.
-
-The system maintains information such as:
-
-```text
-Bidder
-   ↓
-Verification
-   ↓
-Rule Evaluation
-   ↓
-Risk Assessment
-   ↓
-AI Recommendation
-   ↓
-Officer Decision
-```
-
-This creates an auditable decision-making process.
-
----
-
-# 🏗️ System Architecture
-
-```text
-┌─────────────────────────────────────────────┐
-│                 Frontend                    │
-│        Officer / Procurement Dashboard      │
-└──────────────────────┬──────────────────────┘
-                       │
-                       │ REST API
-                       ▼
-┌─────────────────────────────────────────────┐
-│                 FastAPI                     │
-│                                             │
-│  ┌────────────┐ ┌────────────┐ ┌─────────┐ │
-│  │  Bidders   │ │ Documents  │ │Compliance│ │
-│  └────────────┘ └────────────┘ └─────────┘ │
-│                                             │
-│               Dashboard APIs                │
-└──────────────────────┬──────────────────────┘
-                       │
-          ┌────────────┼─────────────┐
-          ▼            ▼             ▼
-   ┌──────────┐ ┌────────────┐ ┌──────────┐
-   │  Portal  │ │ Rule Engine│ │ ML Model │
-   │ Services │ │            │ │ Random   │
-   │          │ │            │ │ Forest   │
-   └──────────┘ └────────────┘ └──────────┘
-                                     │
-                                     ▼
-                              ┌────────────┐
-                              │ Groq/Llama │
-                              │ AI Layer   │
-                              └────────────┘
-                                     │
-                                     ▼
-                              ┌────────────┐
-                              │ PostgreSQL │
-                              │ / Database │
-                              └────────────┘
-```
-
----
-
-# 🧩 Technology Stack
-
-### Backend
-
-* **Python**
-* **FastAPI**
-* **Uvicorn**
-* **SQLAlchemy**
-* REST APIs
-
-### Artificial Intelligence
-
-* **Scikit-learn**
-* **Random Forest**
-* **Groq API**
-* **Llama**
-
-### Data & Compliance
-
-* Rule-based compliance engine
-* Government portal verification services
-* Structured bidder data
-* Audit logging
-
-### Frontend
-
-The frontend communicates with the FastAPI backend through REST APIs and provides the procurement officer dashboard.
-
----
-
-# 📁 Project Structure
-
-```text
-Gem-Rakshak/
-│
-├── Backend/
-│   │
-│   ├── app/
-│   │   ├── __init__.py
-│   │   │
-│   │   ├── routers/
-│   │   │   ├── bidders.py
-│   │   │   ├── documents.py
-│   │   │   ├── compliance.py
-│   │   │   └── dashboard.py
-│   │   │
-│   │   ├── services/
-│   │   │   ├── mock_portals.py
-│   │   │   ├── rule_engine.py
-│   │   │   ├── ml.py
-│   │   │   ├── llm.py
-│   │   │   └── ocr.py
-│   │   │
-│   │   └── ml/
-│   │
-│   ├── uploads/
-│   ├── .env.example
-│   └── requirements.txt
-│
-└── README.md
-```
-
----
-
-# 🔄 Compliance Workflow
-
-### Step 1 — Bidder Selection
-
-The officer selects or uploads bidder information.
-
-### Step 2 — Data Verification
-
-GemGuard AI verifies relevant bidder information through connected or simulated government portal services.
-
-```text
-Udyam
-GSTN
-PAN
-EPFO
-ESIC
-Blacklist
-```
-
-### Step 3 — Rule Evaluation
-
-The compliance engine evaluates predefined statutory and tender-specific conditions.
-
-### Step 4 — Risk Prediction
-
-The Random Forest model analyzes structured compliance features and produces a risk assessment.
-
-### Step 5 — AI Explanation
-
-Groq/Llama generates a natural-language explanation and recommendation based on the structured results.
-
-### Step 6 — Officer Review
-
-The officer reviews:
-
-```text
-Verification Results
-        +
-Rule Results
-        +
-Risk Assessment
-        +
-AI Explanation
-```
-
-### Step 7 — Final Decision
-
-The authorized officer makes the final:
-
-```text
-QUALIFY
-   or
-DISQUALIFY
-```
-
-decision.
-
----
-
-# 🧠 Why Combine Rules + ML + LLM?
-
-GemGuard AI deliberately uses **three different intelligence layers**.
-
-| Layer         | Purpose                              |
-| ------------- | ------------------------------------ |
-| Rule Engine   | Determines explicit compliance       |
-| ML Model      | Identifies risk patterns             |
-| LLM           | Explains results in natural language |
-| Human Officer | Makes final decision                 |
-
-This hybrid approach provides both **automation and explainability**.
-
-```text
-             RULES
-               │
-               ▼
-        "Is requirement met?"
-               │
-               ├──────────────┐
-               ▼              ▼
-             PASS            FAIL
-               │              │
-               └──────┬───────┘
-                      ▼
-                 ML MODEL
-                      │
-                      ▼
-                Risk Level
-                      │
-                      ▼
-                 LLM Layer
-                      │
-                      ▼
-              Human Officer
-                      │
-                      ▼
-              Final Decision
-```
-
----
-
-# 🔐 Explainability & Human-in-the-Loop
-
-GemGuard AI is designed as a **decision-support system**.
-
-The AI does **not** independently make the final procurement decision.
-
-Instead:
-
-```text
-AI verifies
-     ↓
-AI analyzes
-     ↓
-AI explains
-     ↓
-Officer reviews
-     ↓
-Officer decides
-```
-
-This helps maintain accountability and allows procurement officials to override or investigate AI recommendations when necessary.
-
----
-
-# 🧪 Development Setup
-
-## 1. Clone the Repository
-
+### Manual Commands
 ```bash
-git clone <repository-url>
-cd Gem-Rakshak
-```
-
-## 2. Create a Virtual Environment
-
-```bash
-python -m venv venv
-```
-
-### Windows
-
-```bash
-venv\Scripts\activate
-```
-
-### Linux / macOS
-
-```bash
-source venv/bin/activate
-```
-
-## 3. Install Dependencies
-
-```bash
+# Backend (Terminal 1)
 cd Backend
 pip install -r requirements.txt
+python ../scripts/seed_demo.py
+uvicorn app.main:app --reload --port 8000
+
+# Frontend (Terminal 2)
+cd Frontend
+npm install
+npm run dev
 ```
 
-## 4. Configure Environment Variables
+---
 
-Create a `.env` file using the provided example:
+## 🧪 Testing
 
+Run the full suite of 40 automated tests:
 ```bash
-cp .env.example .env
+python -m pytest Backend/tests/ -v
 ```
 
-Configure the required database and AI/API credentials.
+Test coverage:
+- `test_rule_engine.py`: 4 core invariant tests
+- `test_portal_adapters.py`: 18 adapter tests (PAN-GSTIN cross, state code, checksum, mock labelling)
+- `test_scoring.py`: 7 weighted scoring and 90-cap tests
+- `test_audit_chain.py`: 8 tamper-evident hash chain integrity tests
+- `test_e2e_scenarios.py`: 5 end-to-end scenario tests (Fully Compliant, Mismatch, Missing EPFO, etc.)
 
-## 5. Start the Backend
+---
 
-```bash
-uvicorn app.main:app --reload
+## 📁 Repository Structure
+
 ```
-
-The API will run locally through Uvicorn.
-
----
-
-# 🔌 API Modules
-
-The backend is organized around dedicated routers:
-
-```text
-/api/bidders
-/api/documents
-/api/compliance
-/api/dashboard
+GeMGuard AI/
+├── AUDIT.md                        ← Task baseline & repository audit
+├── DEMO_SCRIPT.md                  ← Step-by-step judge demonstration guide
+├── setup.bat                       ← One-command Windows setup script
+├── Backend/
+│   ├── app/
+│   │   ├── config.py               ← App configuration & ADAPTER_MODE
+│   │   ├── database.py             ← SQLAlchemy database engine
+│   │   ├── main.py                 ← FastAPI entry point & routers
+│   │   ├── models.py               ← DB schema (Bidder, Document, ComplianceCheck, AuditLog)
+│   │   ├── schemas.py              ← Pydantic v2 schemas
+│   │   ├── ml/                     ← Random Forest risk model & training
+│   │   ├── routers/                ← API endpoints (bidders, documents, compliance, dashboard)
+│   │   └── services/               ← Business logic (adapters, audit, rule engine, LLM, ML)
+│   ├── tests/                      ← 40 automated unit & integration tests
+│   └── requirements.txt
+├── Frontend/                       ← React 19 + Vite + Tailwind CSS UI
+├── scripts/
+│   ├── generate_data.py            ← Synthetic data generator (40+ bidders, 11 scenarios)
+│   └── seed_demo.py                ← One-click demo DB seeder
+└── sample_docs/                    ← Sample PDF document evidence
 ```
-
-These modules provide separation between bidder management, document processing, compliance evaluation, and dashboard functionality.
-
----
-
-# 📈 Example Risk Assessment
-
-A bidder may receive an evaluation such as:
-
-```text
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        BIDDER ANALYSIS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-GST Compliance       ✅ PASS
-PAN Verification     ✅ PASS
-Udyam Registration   ✅ PASS
-EPFO Compliance      ⚠️ WARNING
-ESIC Compliance      ✅ PASS
-Blacklist Check      ✅ PASS
-ITR Compliance       ❌ FAIL
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Risk Level            : MEDIUM
-Compliance Status     : REVIEW
-AI Recommendation     : Further Review
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-The officer can then inspect the failed/warning conditions before making the final decision.
-
----
-
-# 🎯 Benefits
-
-### For Procurement Officers
-
-* Faster bidder verification
-* Centralized compliance information
-* Reduced manual checking
-* Explainable risk assessment
-* Better auditability
-
-### For Government Procurement
-
-* More standardized verification
-* Early identification of risky bidders
-* Consistent rule application
-* Improved transparency
-* Human-controlled final decisions
-
----
-
-# 🚀 Future Scope
-
-GemGuard AI can be extended with:
-
-* 🔗 Live government portal/API integrations
-* 📄 Advanced document OCR
-* 🌐 Multilingual document processing
-* 📊 Historical bidder risk analytics
-* 🔍 Fraud/anomaly detection
-* 🧠 Improved ML models using historical procurement data
-* 🔐 Role-based access control
-* 📝 Automated compliance reports
-* 📈 Tender-level analytics
-* 🔔 Real-time compliance alerts
-
----
-
-# 🏆 Vision
-
-> **Making government procurement smarter, faster, explainable, and more accountable with AI.**
-
-GemGuard AI aims to transform bidder verification from a fragmented manual process into an **intelligent, auditable, human-controlled compliance workflow**.
-
----
-
-# 👥 Team
-
-**GemGuard AI — AI-Powered Government Procurement Compliance**
-
-Built with ❤️ for **Smart India Hackathon 2026**.
 
 ---
 
 ## 📜 License
-
-This project is intended for educational, research, and hackathon purposes.
-
-Before production deployment, all government portal integrations, statutory rules, security controls, and compliance requirements should be validated with the relevant authorities.
+Developed for Smart India Hackathon (SIH) 2026.

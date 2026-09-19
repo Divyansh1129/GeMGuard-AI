@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     # ML model path
     RISK_MODEL_PATH: str = "./app/ml/risk_model.pkl"
 
+    # Portal adapter mode: "mock" (default) or "live"
+    # In "mock" mode, all portal calls except offline checks return deterministic mock responses.
+    # In "live" mode, GST portal live check is attempted (unofficial endpoint).
+    # NOTE: No official government API integration is claimed. Mocks are clearly labelled.
+    ADAPTER_MODE: str = "mock"
+
     class Config:
         env_file = ".env"
 

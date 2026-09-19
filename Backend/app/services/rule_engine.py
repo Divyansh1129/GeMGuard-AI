@@ -196,8 +196,92 @@ def build_document_results(documents, rules):
     return output
 
 
-def rule_based_score(results):
+def rule_based_score(results: dict, *, return_breakdown: bool = False):
+    """
+    Weighted compliance score with 90/100 cap when live Govt API is not configured.
+
+    results: dict mapping rule_key -> {pass, status, required, ...}
+             (from run_rule_checks() output)
+    return_breakdown: if True, returns (score, breakdown_dict) instead of just score
+
+    The 90-point cap applies when ANY govt_api_auth_* rule is 'needs_review',
+    indicating that direct government registry verification is not configured.
+    """
+    import json, os
+
+    # Load scoring config
+    config_path = os.path.join(os.path.dirname(__file__), "scoring_config.json")
+    try:
+        with open(config_path) as f:
+            config = json.load(f)
+    except Exception:
+        config = {}
+
+    categories = config.get("categories", {})
+    max_without_api = config.get("max_score_without_live_api", 90)
+    live_api_rules = set(config.get("live_api_rules", []))
+
     if not results:
-        return 100.0
-    passing = sum(1 for r in results.values() if r.get("pass"))
-    return round(100.0 * passing / len(results), 1)
+        score = 100.0
+        breakdown = {"total": 100.0, "categories": {}, "api_cap_applied": False}
+        return (score, breakdown) if return_breakdown else score
+
+    # ── Per-category weighted scoring ──────────────────────────────────────
+    category_scores = {}
+    total_weight = 0.0
+    weighted_sum = 0.0
+
+    for cat_name, cat_cfg in categories.items():
+        weight = cat_cfg.get("weight", 1)
+        rule_keys = set(cat_cfg.get("rules", []))
+        prefix = cat_cfg.get("rules_prefix", "")
+
+        # Collect matching rules
+        if prefix:
+            matching = {k: v for k, v in results.items() if k.startswith(prefix) and v.get("required", True)}
+        else:
+            matching = {k: results[k] for k in rule_keys if k in results and results[k].get("required", True)}
+
+        if not matching:
+            continue
+
+        passing = sum(1 for r in matching.values() if r.get("pass"))
+        cat_score = round(100.0 * passing / len(matching), 1)
+        category_scores[cat_name] = {
+            "score": cat_score,
+            "weight": weight,
+            "passing": passing,
+            "total": len(matching),
+        }
+        total_weight += weight
+        weighted_sum += cat_score * weight
+
+    if total_weight == 0:
+        # Fallback: simple ratio over all required rules
+        required = {k: v for k, v in results.items() if v.get("required", True)}
+        if not required:
+            raw = 100.0  # no required rules => nothing failed => perfect score
+        else:
+            passing = sum(1 for r in required.values() if r.get("pass"))
+            raw = round(100.0 * passing / len(required), 1)
+    else:
+        raw = round(weighted_sum / total_weight, 1)
+
+    # ── Apply 90/100 cap when direct Govt API not configured ───────────────
+    api_cap_applied = any(
+        v.get("status") == "needs_review"
+        for k, v in results.items()
+        if k.startswith("govt_api_auth_")
+    )
+    score = min(raw, max_without_api) if api_cap_applied else raw
+
+    breakdown = {
+        "raw_score": raw,
+        "total": score,
+        "categories": category_scores,
+        "api_cap_applied": api_cap_applied,
+        "api_cap_limit": max_without_api if api_cap_applied else None,
+    }
+
+    return (round(score, 1), breakdown) if return_breakdown else round(score, 1)
+

@@ -1,0 +1,37 @@
+{
+  "scenario_id": "S11",
+  "scenario_name": "OEM Authorization Missing",
+  "pan": "KKKNT9012M",
+  "gstin": "29KKKNT9012M1ZH",
+  "note": "Mock portal response \u2014 not from authenticated government API",
+  "adapters": {
+    "pan_gstin_cross": {
+      "verified": true,
+      "status": "match",
+      "source": "offline_cross_check",
+      "detail": "PAN matches GSTIN embedded PAN."
+    },
+    "gstin_live_status": {
+      "verified": true,
+      "status": "active",
+      "source": "mock_gst_portal",
+      "gst_status": "Active",
+      "detail": "GSTIN is Active on GST portal.",
+      "is_mock": true
+    },
+    "epfo_compliance": {
+      "verified": true,
+      "status": "needs_review",
+      "source": "mock_epfo_portal",
+      "is_mock": true,
+      "detail": "EPFO registration document uploaded and processed."
+    },
+    "esic_compliance": {
+      "verified": true,
+      "status": "needs_review",
+      "source": "mock_esic_portal",
+      "is_mock": true,
+      "detail": "ESIC registration document uploaded and processed."
+    }
+  }
+}
